@@ -1,5 +1,7 @@
 import React, {useState} from "react";
 
+import { api } from "../../services/api";
+
 import { 
   Input, 
   InputGroup, 
@@ -21,7 +23,6 @@ import {
 } from './styles';
 
 import bg from '../../assets/pages/signUp/Background.png'
-import { icons } from "react-icons";
 
 const SignUp = () => {
   const [name, setName] = React.useState('');
@@ -37,8 +38,35 @@ const SignUp = () => {
 
   const handleChangePassword = (event) => setPassword(event.target.value);
 
+  const validateUserInfor = (data) => {
+    if (data.name != null && data.name != "") {
+      alert("usuário inválido");
+      return true;
+    }else if (data.email != null && data.email != "") {
+      alert("usuário inválido");
+      return true;
+    }else if (data.password != null && data.password != "") {
+      alert("usuário inválido");
+      return true;
+    }
+
+    return false;
+  }
+
   const handleSubmitForms = () => {
-    alert('Usuário cadastrado!');
+    const CreateUser = async () => {
+      const userData = {
+        name,
+        email,
+        password
+      };
+
+      if(validateUserInfor(userData)) return;
+  
+      await api.post("/user", userData);
+    }
+
+    CreateUser();
   }
 
   return (
