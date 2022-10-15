@@ -39,14 +39,14 @@ const SignUp = () => {
   const handleChangePassword = (event) => setPassword(event.target.value);
 
   const validateUserInfor = (data) => {
-    if (data.name != null && data.name != "") {
-      alert("usuário inválido");
+    if (data.name == null || data.name == "") {
+      alert("usuário inválido1");
       return true;
-    }else if (data.email != null && data.email != "") {
-      alert("usuário inválido");
+    }else if (data.email == null || data.email == "") {
+      alert("usuário inválido2");
       return true;
-    }else if (data.password != null && data.password != "") {
-      alert("usuário inválido");
+    }else if (data.password == null || data.password == "") {
+      alert("usuário inválido3");
       return true;
     }
 
@@ -61,9 +61,12 @@ const SignUp = () => {
         password
       };
 
+
       if(validateUserInfor(userData)) return;
   
-      await api.post("/user", userData);
+      var user = await api.post("User", userData);
+
+      console.log(user);
     }
 
     CreateUser();
