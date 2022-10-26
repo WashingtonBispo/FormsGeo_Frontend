@@ -23,27 +23,21 @@ import {
   ImageAreaContainer
 } from './styles';
 
-import bg from '../../assets/pages/signUp/WomanAndForm.png'
+import bg from '../../assets/pages/signIn/WomanChatting.png'
 
-const SignUp = () => {
-  const [name, setName] = React.useState('');
+const SignIn = () => {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [show, setShow] = useState(false);
   
   const handleClick = () => setShow(!show);
 
-  const handleChangeName = (event) => setName(event.target.value);
-
   const handleChangeEmail = (event) => setEmail(event.target.value);
 
   const handleChangePassword = (event) => setPassword(event.target.value);
 
   const validateUserInfor = (data) => {
-    if (data.name == null || data.name == "") {
-      alert("usuário inválido1");
-      return true;
-    }else if (data.email == null || data.email == "") {
+    if (data.email == null || data.email == "") {
       alert("usuário inválido2");
       return true;
     }else if (data.password == null || data.password == "") {
@@ -55,63 +49,54 @@ const SignUp = () => {
   }
 
   const handleSubmitForms = () => {
-    const CreateUser = async () => {
+    const AuthUser = async () => {
       const userData = {
-        name,
         email,
         password
       };
 
-
       if(validateUserInfor(userData)) return;
   
-      var user = await api.post("User", userData);
+      var token = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
 
-      console.log(user);
+      console.log(token);
     }
 
-    CreateUser();
+    AuthUser();
   }
 
   return (
     <>
     <PNContainer>
-      <PNFormContainer>
-        <h1>Forms</h1>
-      </PNFormContainer>
       <PNImageAreaContainer>
-        <h1>Geo</h1>
+        <h1>Forms</h1>
       </PNImageAreaContainer>
+      <PNFormContainer>
+        <h1>Geo</h1>
+      </PNFormContainer>
     </PNContainer>
     <Container>
+      <ImageAreaContainer>
+        <p>Realize sua coleta de dados com geolocalização agora!</p>
+        <img src={bg} />
+      </ImageAreaContainer>
       <FormContainer>
         <div className="LoginContainer">
           <Text fontSize='30px' color='#A7A8BB'>
-            cadastrado
+            Seja Bem Vindo
           </Text>
           <div className="LoginLink">
             <Text fontSize='12px' color='#A7A8BB'>
-              Já possui conta? 
+              Primeira vez aqui? 
             </Text>
-            <Link to="/">
+            <Link to="/cadastro">
               <Text fontSize='12px' color="#20D489">
-                Acesse por aqui!
+                Crie sua conta!
               </Text>
             </Link>
           </div>
         </div>
         <div className="InputsContainer">
-          <div className="InputContainer">
-            <Text mb='8px'>Nome completo</Text>
-            <InputGroup size='md'>
-              <Input
-                value={name}
-                onChange={handleChangeName}
-                pr='4.5rem'
-                type='text'
-                />
-            </InputGroup>
-          </div>
           <div className="InputContainer">
             <Text mb='8px'>E-mail</Text>
             <InputGroup size='md'>
@@ -152,16 +137,12 @@ const SignUp = () => {
           size='md' 
           onClick={handleSubmitForms}
         >
-          Cadastrar
+          Entrar
         </Button>
       </FormContainer>
-      <ImageAreaContainer>
-        <p>Realize sua coleta de dados com geolocalização agora!</p>
-        <img src={bg} />
-      </ImageAreaContainer>
     </Container>
     </>
   );
 };
 
-export default SignUp;
+export default SignIn;
