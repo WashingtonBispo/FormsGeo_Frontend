@@ -64,7 +64,8 @@ const Perfil = () => {
       .required('Senha obrigatória'),
     pastPassword: Yup.string()
       .min(8,'Senha de no minimo 8 caractéres')
-      .required('Senha obrigatória'),
+      .oneOf([Yup.ref('newPassword')], 'Senha não confere')
+      .required('Repetir senha obrigatório')
   });
   
   const handleClick = () => setShow(!show);
