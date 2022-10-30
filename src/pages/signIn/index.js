@@ -1,6 +1,12 @@
 import React, {useState} from "react";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useToast, Wrap, WrapItem } from '@chakra-ui/react'
 
+import * as Yup from 'yup';
+
+import authAction from "../../store/action/auth";
+import getValidationErrors from '../../utils/getValidationErrors'
 import { api } from "../../services/api";
 
 import { 
@@ -28,7 +34,21 @@ import bg from '../../assets/pages/signIn/WomanChatting.png'
 const SignIn = () => {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [invalidEmail, setInvalidEmail] = React.useState(false);
+  const [invalidPassword, setInvalidPassword] = React.useState(false);
   const [show, setShow] = useState(false);
+
+  const toast = useToast();
+  const dispatch = useDispatch();
+
+  const schema = Yup.object().shape({
+    email: Yup.string()
+      .required('E-mail obrigatório')
+      .email('Digite um e-mail válido'),
+    password: Yup.string()
+      .min(8,'Senha de no minimo 8 caractéres')
+      .required('Senha obrigatória'),
+  });
   
   const handleClick = () => setShow(!show);
 
@@ -36,30 +56,55 @@ const SignIn = () => {
 
   const handleChangePassword = (event) => setPassword(event.target.value);
 
-  const validateUserInfor = (data) => {
-    if (data.email == null || data.email == "") {
-      alert("usuário inválido2");
-      return true;
-    }else if (data.password == null || data.password == "") {
-      alert("usuário inválido3");
-      return true;
-    }
-
-    return false;
+  const showErrorToast = (message) => {
+    toast({
+      title: message,
+      position: "top-right",
+      status: "error",
+      isClosable: true,
+    });
   }
 
   const handleSubmitForms = () => {
     const AuthUser = async () => {
-      const userData = {
-        email,
-        password
-      };
+      try {
+        const userData = {
+          email,
+          password
+        };
+        
+        await schema.validate(userData, {
+          abortEarly: false,
+        });
+        
+        var token = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
 
-      if(validateUserInfor(userData)) return;
-  
-      var token = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
+        dispatch(
+          authAction.logIn({
+            token
+          })
+        );
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
 
-      console.log(token);
+          if (errors.email != undefined){
+            showErrorToast(errors.email);
+            setInvalidEmail(true);
+          }
+          else
+            setInvalidEmail(false);
+
+          if (errors.password != undefined){
+            showErrorToast(errors.password);
+            setInvalidPassword(true);
+          }
+          else
+            setInvalidPassword(false);
+
+          return;
+        }
+      }
     }
 
     AuthUser();
@@ -78,7 +123,7 @@ const SignIn = () => {
     <Container>
       <ImageAreaContainer>
         <p>Realize sua coleta de dados com geolocalização agora!</p>
-        <img src={bg} />
+        <img src={bg} alt={"Imagem do cadastro"} />
       </ImageAreaContainer>
       <FormContainer>
         <div className="LoginContainer">
@@ -101,6 +146,7 @@ const SignIn = () => {
             <Text mb='8px'>E-mail</Text>
             <InputGroup size='md'>
               <Input
+                isInvalid={invalidEmail}
                 value={email}
                 onChange={handleChangeEmail}
                 pr='4.5rem'
@@ -112,6 +158,7 @@ const SignIn = () => {
             <Text mb='8px'>Senha</Text>
             <InputGroup size='md'>
               <Input
+                isInvalid={invalidPassword}
                 value={password}
                 onChange={handleChangePassword}
                 pr='4.5rem'
