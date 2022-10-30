@@ -1,11 +1,19 @@
 import { Routes, Route } from "react-router-dom";
 import SignUp from "./pages/signUp"
+import SignIn from "./pages/signIn"
+import Forms from "./pages/forms"
+
+import { ProtectedRoute } from "./ProtectedRoute";
 
 function App() {
   return (
     <div className="App">
       <Routes>
-        <Route path="/" element={<SignUp />} />
+        <Route path="/cadastro" exact element={<SignUp />} />
+        <Route path="/login" exact element={<SignIn />} />
+        <Route exact path='/' element={<ProtectedRoute authLevel={"Researcher"} />}>
+            <Route exact path='/' element={<Forms />}/>
+        </Route>
       </Routes>
     </div>
   );

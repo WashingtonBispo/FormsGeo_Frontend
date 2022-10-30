@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useToast } from '@chakra-ui/react'
 
@@ -29,13 +29,11 @@ import {
   ImageAreaContainer
 } from './styles';
 
-import bg from '../../assets/pages/signUp/WomanAndForm.png'
+import bg from '../../assets/pages/signIn/WomanChatting.png'
 
-const SignUp = () => {
-  const [name, setName] = React.useState('');
+const SignIn = () => {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [invalidName, setInvalidName] = React.useState(false);
   const [invalidEmail, setInvalidEmail] = React.useState(false);
   const [invalidPassword, setInvalidPassword] = React.useState(false);
   const [show, setShow] = useState(false);
@@ -45,9 +43,6 @@ const SignUp = () => {
   const dispatch = useDispatch();
 
   const schema = Yup.object().shape({
-    name: Yup.string()
-      .required('Nome obrigatório')
-      .min(4, 'Nome de no minimo 8 caractéres'),
     email: Yup.string()
       .required('E-mail obrigatório')
       .email('Digite um e-mail válido'),
@@ -57,8 +52,6 @@ const SignUp = () => {
   });
   
   const handleClick = () => setShow(!show);
-
-  const handleChangeName = (event) => setName(event.target.value);
 
   const handleChangeEmail = (event) => setEmail(event.target.value);
 
@@ -74,19 +67,18 @@ const SignUp = () => {
   }
 
   const handleSubmitForms = () => {
-    const CreateUser = async () => {
-      try{
+    const AuthUser = async () => {
+      try {
         const userData = {
-          name,
           email,
           password
         };
-
+        
         await schema.validate(userData, {
           abortEarly: false,
         });
-  
-        const responseData = await api.post("User", userData);
+        
+        const responseData = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
         const token = responseData.data.jwt;
 
         dispatch(
@@ -99,13 +91,6 @@ const SignUp = () => {
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
-
-          if (errors.name != undefined){
-            showErrorToast(errors.name);
-            setInvalidName(true);
-          }
-          else
-            setInvalidName(false);
 
           if (errors.email != undefined){
             showErrorToast(errors.email);
@@ -123,57 +108,48 @@ const SignUp = () => {
 
           return;
         }else{
-          showErrorToast("Ocorreu um erro ao fazer o cadastro.");
+          showErrorToast("Ocorreu um erro ao fazer login, cheque as credenciais.");
 
           return;
         }
       }
     }
 
-    CreateUser();
-  
+    AuthUser();
   }
 
   return (
     <>
     <PNContainer>
-      <PNFormContainer>
-        <h1>Forms</h1>
-      </PNFormContainer>
       <PNImageAreaContainer>
-        <h1>Geo</h1>
+        <h1>Forms</h1>
       </PNImageAreaContainer>
+      <PNFormContainer>
+        <h1>Geo</h1>
+      </PNFormContainer>
     </PNContainer>
     <Container>
+      <ImageAreaContainer>
+        <p>Realize sua coleta de dados com geolocalização agora!</p>
+        <img src={bg} alt={"Imagem do cadastro"} />
+      </ImageAreaContainer>
       <FormContainer>
         <div className="LoginContainer">
           <Text fontSize='30px' color='#A7A8BB'>
-            cadastrado
+            Seja Bem Vindo
           </Text>
           <div className="LoginLink">
             <Text fontSize='12px' color='#A7A8BB'>
-              Já possui conta? 
+              Primeira vez aqui? 
             </Text>
-            <Link to="/login">
+            <Link to="/cadastro">
               <Text fontSize='12px' color="#20D489">
-                Acesse por aqui!
+                Crie sua conta!
               </Text>
             </Link>
           </div>
         </div>
         <div className="InputsContainer">
-          <div className="InputContainer">
-            <Text mb='8px'>Nome completo</Text>
-            <InputGroup size='md'>
-              <Input
-                isInvalid={invalidName}
-                value={name}
-                onChange={handleChangeName}
-                pr='4.5rem'
-                type='text'
-                />
-            </InputGroup>
-          </div>
           <div className="InputContainer">
             <Text mb='8px'>E-mail</Text>
             <InputGroup size='md'>
@@ -216,16 +192,12 @@ const SignUp = () => {
           size='md' 
           onClick={handleSubmitForms}
         >
-          Cadastrar
+          Entrar
         </Button>
       </FormContainer>
-      <ImageAreaContainer>
-        <p>Realize sua coleta de dados com geolocalização agora!</p>
-        <img src={bg} />
-      </ImageAreaContainer>
     </Container>
     </>
   );
 };
 
-export default SignUp;
+export default SignIn;
