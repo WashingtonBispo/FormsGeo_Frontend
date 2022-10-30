@@ -87,6 +87,8 @@ const SignUp = () => {
   
         var token = await api.post("User", userData);
 
+        console.log(token);
+
         dispatch(
           authAction.logIn({
             token
@@ -146,7 +148,7 @@ const SignUp = () => {
             <Text fontSize='12px' color='#A7A8BB'>
               Já possui conta? 
             </Text>
-            <Link to="/">
+            <Link to="/login">
               <Text fontSize='12px' color="#20D489">
                 Acesse por aqui!
               </Text>

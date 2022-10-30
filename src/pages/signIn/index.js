@@ -77,7 +77,9 @@ const SignIn = () => {
           abortEarly: false,
         });
         
-        var token = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
+        const responseData = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
+
+        const token = responseData.data.jwt;
 
         dispatch(
           authAction.logIn({
