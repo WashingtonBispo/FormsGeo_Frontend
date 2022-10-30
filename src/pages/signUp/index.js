@@ -1,6 +1,12 @@
 import React, {useState} from "react";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useToast } from '@chakra-ui/react'
 
+import * as Yup from 'yup';
+
+import authAction from "../../store/action/auth";
+import getValidationErrors from '../../utils/getValidationErrors'
 import { api } from "../../services/api";
 
 import { 
@@ -29,7 +35,25 @@ const SignUp = () => {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [invalidName, setInvalidName] = React.useState(false);
+  const [invalidEmail, setInvalidEmail] = React.useState(false);
+  const [invalidPassword, setInvalidPassword] = React.useState(false);
   const [show, setShow] = useState(false);
+
+  const toast = useToast();
+  const dispatch = useDispatch();
+
+  const schema = Yup.object().shape({
+    name: Yup.string()
+      .required('Nome obrigatório')
+      .min(4, 'Nome de no minimo 8 caractéres'),
+    email: Yup.string()
+      .required('E-mail obrigatório')
+      .email('Digite um e-mail válido'),
+    password: Yup.string()
+      .min(8,'Senha de no minimo 8 caractéres')
+      .required('Senha obrigatória'),
+  });
   
   const handleClick = () => setShow(!show);
 
@@ -39,38 +63,67 @@ const SignUp = () => {
 
   const handleChangePassword = (event) => setPassword(event.target.value);
 
-  const validateUserInfor = (data) => {
-    if (data.name == null || data.name == "") {
-      alert("usuário inválido1");
-      return true;
-    }else if (data.email == null || data.email == "") {
-      alert("usuário inválido2");
-      return true;
-    }else if (data.password == null || data.password == "") {
-      alert("usuário inválido3");
-      return true;
-    }
-
-    return false;
+  const showErrorToast = (message) => {
+    toast({
+      title: message,
+      position: "top-right",
+      status: "error",
+      isClosable: true,
+    });
   }
 
   const handleSubmitForms = () => {
     const CreateUser = async () => {
-      const userData = {
-        name,
-        email,
-        password
-      };
+      try{
+        const userData = {
+          name,
+          email,
+          password
+        };
 
-
-      if(validateUserInfor(userData)) return;
+        await schema.validate(userData, {
+          abortEarly: false,
+        });
   
-      var user = await api.post("User", userData);
+        var token = await api.post("User", userData);
 
-      console.log(user);
+        dispatch(
+          authAction.logIn({
+            token
+          })
+        );
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          if (errors.name != undefined){
+            showErrorToast(errors.name);
+            setInvalidName(true);
+          }
+          else
+            setInvalidName(false);
+
+          if (errors.email != undefined){
+            showErrorToast(errors.email);
+            setInvalidEmail(true);
+          }
+          else
+            setInvalidEmail(false);
+
+          if (errors.password != undefined){
+            showErrorToast(errors.password);
+            setInvalidPassword(true);
+          }
+          else
+            setInvalidPassword(false);
+
+          return;
+        }
+      }
     }
 
     CreateUser();
+  
   }
 
   return (
@@ -105,6 +158,7 @@ const SignUp = () => {
             <Text mb='8px'>Nome completo</Text>
             <InputGroup size='md'>
               <Input
+                isInvalid={invalidName}
                 value={name}
                 onChange={handleChangeName}
                 pr='4.5rem'
@@ -116,6 +170,7 @@ const SignUp = () => {
             <Text mb='8px'>E-mail</Text>
             <InputGroup size='md'>
               <Input
+                isInvalid={invalidEmail}
                 value={email}
                 onChange={handleChangeEmail}
                 pr='4.5rem'
@@ -127,6 +182,7 @@ const SignUp = () => {
             <Text mb='8px'>Senha</Text>
             <InputGroup size='md'>
               <Input
+                isInvalid={invalidPassword}
                 value={password}
                 onChange={handleChangePassword}
                 pr='4.5rem'
