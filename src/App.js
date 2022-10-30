@@ -11,8 +11,8 @@ function App() {
       <Routes>
         <Route path="/cadastro" exact element={<SignUp />} />
         <Route path="/login" exact element={<SignIn />} />
-        <Route exact path='/forms' element={<ProtectedRoute authLevel={"Researcher"} />}>
-            <Route exact path='/forms' element={<Forms />}/>
+        <Route exact path='/' element={<ProtectedRoute authLevel={"Researcher"} />}>
+            <Route exact path='/' element={<Forms />}/>
         </Route>
       </Routes>
     </div>

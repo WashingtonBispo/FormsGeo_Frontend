@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useToast } from '@chakra-ui/react'
 
@@ -39,6 +39,7 @@ const SignIn = () => {
   const [show, setShow] = useState(false);
 
   const toast = useToast();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const schema = Yup.object().shape({
@@ -78,7 +79,6 @@ const SignIn = () => {
         });
         
         const responseData = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
-
         const token = responseData.data.jwt;
 
         dispatch(
@@ -86,6 +86,8 @@ const SignIn = () => {
             token
           })
         );
+
+        navigate("/");
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
@@ -103,6 +105,10 @@ const SignIn = () => {
           }
           else
             setInvalidPassword(false);
+
+          return;
+        }else{
+          showErrorToast("Ocorreu um erro ao fazer login, cheque as credenciais.");
 
           return;
         }

@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useToast } from '@chakra-ui/react'
 
@@ -41,6 +41,7 @@ const SignUp = () => {
   const [show, setShow] = useState(false);
 
   const toast = useToast();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const schema = Yup.object().shape({
@@ -85,15 +86,16 @@ const SignUp = () => {
           abortEarly: false,
         });
   
-        var token = await api.post("User", userData);
-
-        console.log(token);
+        const responseData = await api.post("User", userData);
+        const token = responseData.data.jwt;
 
         dispatch(
           authAction.logIn({
             token
           })
         );
+
+        navigate("/");
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
@@ -118,6 +120,10 @@ const SignUp = () => {
           }
           else
             setInvalidPassword(false);
+
+          return;
+        }else{
+          showErrorToast("Ocorreu um erro ao fazer o cadastro.");
 
           return;
         }
