@@ -37,7 +37,7 @@ const Header = () => {
               <></>
             )}
             
-            <Link to="/perfil">
+            <Link to="/profile">
               <Text fontSize='18px' color="#FFFFFF">
                 Perfil
               </Text>

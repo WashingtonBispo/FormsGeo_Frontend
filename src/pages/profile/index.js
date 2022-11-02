@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from "react";
-import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useToast } from '@chakra-ui/react'
 
@@ -32,7 +31,7 @@ import {
   ButtonContainer
 } from './styles';
 
-const Perfil = () => {
+const Profile = () => {
   const [name, setName] = React.useState('');
   const [pastPassword, setPastPassword] = React.useState('');
   const [newPassword, setNewPassword] = React.useState('');
@@ -180,7 +179,7 @@ const Perfil = () => {
     <>
       <Header />
 
-      <CurrentRoute name={"Perfil"} route={"Perfil"}/>
+      <CurrentRoute name={"Profile"} route={"Profile"}/>
       
       <BodyContainer>
         <UserContainer>
@@ -282,4 +281,4 @@ const Perfil = () => {
   );
 };
 
-export default Perfil;
+export default Profile;

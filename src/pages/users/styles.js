@@ -41,3 +41,10 @@ export const UserInfor = styled.div`
 export const UserOptions = styled.div`
   width: 150px;
 `;
+
+export const SearchContainer = styled.div`
+  width: 100%;
+  padding-bottom: 20px;
+  background-color: #F5F5F5;
+  margin: 0 auto;
+`;

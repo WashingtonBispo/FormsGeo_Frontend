@@ -47,12 +47,12 @@ const SignUp = () => {
   const schema = Yup.object().shape({
     name: Yup.string()
       .required('Nome obrigatório')
-      .min(4, 'Nome de no minimo 8 caractéres'),
+      .min(4, 'Nome de no minimo 8 caracteres'),
     email: Yup.string()
       .required('E-mail obrigatório')
       .email('Digite um e-mail válido'),
     password: Yup.string()
-      .min(8,'Senha de no minimo 8 caractéres')
+      .min(8,'Senha de no minimo 8 caracteres')
       .required('Senha obrigatória'),
   });
   

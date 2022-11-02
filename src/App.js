@@ -3,7 +3,8 @@ import SignUp from "./pages/signUp"
 import SignIn from "./pages/signIn"
 import Forms from "./pages/forms"
 import Users from "./pages/users"
-import Perfil from "./pages/perfil"
+import Profile from "./pages/profile"
+import GlobalStyle from "./utils/globalStyle"
 
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -17,7 +18,7 @@ function App() {
             <Route exact path='/' element={<Forms />}/>
         </Route>
         <Route exact path='/perfil' element={<ProtectedRoute authLevel={"Researcher"} />}>
-            <Route exact path='/perfil' element={<Perfil />}/>
+            <Route exact path='/perfil' element={<Profile />}/>
         </Route>
         <Route exact path='/usuarios' element={<ProtectedRoute authLevel={"Admin"} />}>
             <Route exact path='/usuarios' element={<Users />}/>
