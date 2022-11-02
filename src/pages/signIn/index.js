@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { useToast } from '@chakra-ui/react'
+import { useToast, useDisclosure } from '@chakra-ui/react'
 
 import * as Yup from 'yup';
 
@@ -15,7 +15,14 @@ import {
   InputRightElement, 
   Button, 
   Text,
-  Icon
+  Icon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
 } from '@chakra-ui/react'
 
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
@@ -36,11 +43,20 @@ const SignIn = () => {
   const [password, setPassword] = React.useState('');
   const [invalidEmail, setInvalidEmail] = React.useState(false);
   const [invalidPassword, setInvalidPassword] = React.useState(false);
+  const [forgetEmail, setForgetEmail] = React.useState('');
+  const [invalidForgetEmail, setInvalidForgetEmail] = React.useState(false);
   const [show, setShow] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   const toast = useToast();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const emailSchema = Yup.object().shape({
+    email: Yup.string()
+      .required('E-mail obrigatório')
+      .email('Digite um e-mail válido')
+  });
 
   const schema = Yup.object().shape({
     email: Yup.string()
@@ -56,6 +72,8 @@ const SignIn = () => {
   const handleChangeEmail = (event) => setEmail(event.target.value);
 
   const handleChangePassword = (event) => setPassword(event.target.value);
+  
+  const handleChangeForgetEmail = (event) => setForgetEmail(event.target.value);
 
   const showErrorToast = (message) => {
     toast({
@@ -79,8 +97,12 @@ const SignIn = () => {
         });
         
         const responseData = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
-        const token = responseData.data.jwt;
+        
+        if (responseData.status === 204)
+          throw "error";
 
+        const token = responseData.data.jwt;
+        
         dispatch(
           authAction.logIn({
             token
@@ -118,84 +140,163 @@ const SignIn = () => {
     AuthUser();
   }
 
+  const handleSubmitChangePassword = () => {
+    const handleChangePassword = async () => {
+      try {
+        const userData = {
+          email
+        };
+        
+        await emailSchema.validate(userData, {
+          abortEarly: false,
+        });
+
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          if (errors.email != undefined){
+            showErrorToast(errors.email);
+            setInvalidForgetEmail(true);
+          }
+          else
+          setInvalidForgetEmail(false);
+
+          return;
+        }else{
+          showErrorToast("Ocorreu um erro ao tentar alterar sua senha, Verifique se o email está correto.");
+
+          return;
+        }
+      }
+    }
+
+    handleChangePassword();
+  }
+
   return (
     <>
-    <PNContainer>
-      <PNImageAreaContainer>
-        <h1>Forms</h1>
-      </PNImageAreaContainer>
-      <PNFormContainer>
-        <h1>Geo</h1>
-      </PNFormContainer>
-    </PNContainer>
-    <Container>
-      <ImageAreaContainer>
-        <p>Realize sua coleta de dados com geolocalização agora!</p>
-        <img src={bg} alt={"Imagem do cadastro"} />
-      </ImageAreaContainer>
-      <FormContainer>
-        <div className="LoginContainer">
-          <Text fontSize='30px' color='#A7A8BB'>
-            Seja Bem Vindo
-          </Text>
-          <div className="LoginLink">
-            <Text fontSize='12px' color='#A7A8BB'>
-              Primeira vez aqui? 
+      <PNContainer>
+        <PNImageAreaContainer>
+          <h1>Forms</h1>
+        </PNImageAreaContainer>
+        <PNFormContainer>
+          <h1>Geo</h1>
+        </PNFormContainer>
+      </PNContainer>
+      <Container>
+        <ImageAreaContainer>
+          <p>Realize sua coleta de dados com geolocalização agora!</p>
+          <img src={bg} alt={"Imagem do cadastro"} />
+        </ImageAreaContainer>
+        <FormContainer>
+          <div className="LoginContainer">
+            <Text fontSize='30px' color='#A7A8BB'>
+              Seja Bem Vindo
             </Text>
-            <Link to="/cadastro">
-              <Text fontSize='12px' color="#20D489">
-                Crie sua conta!
+            <div className="LoginLink">
+              <Text fontSize='12px' color='#A7A8BB'>
+                Primeira vez aqui? 
               </Text>
-            </Link>
+              <Link to="/cadastro">
+                <Text fontSize='12px' color="#20D489">
+                  Crie sua conta!
+                </Text>
+              </Link>
+            </div>
           </div>
-        </div>
-        <div className="InputsContainer">
-          <div className="InputContainer">
+          <div className="InputsContainer">
+            <div className="InputContainer">
+              <Text mb='8px'>E-mail</Text>
+              <InputGroup size='md'>
+                <Input
+                  isInvalid={invalidEmail}
+                  value={email}
+                  onChange={handleChangeEmail}
+                  pr='4.5rem'
+                  type='text'
+                  />
+              </InputGroup>
+            </div>
+            <div className="InputContainer">  
+              <div className="InputPasswordContainer">
+                <Text mb='8px'>Senha</Text>
+
+                <button onClick={onOpen}>
+                  <Text mb='8px' color="#20D489">
+                    Esqueceu sua senha?
+                  </Text>
+                </button>
+              </div>
+
+              <InputGroup size='md'>
+                <Input
+                  isInvalid={invalidPassword}
+                  value={password}
+                  onChange={handleChangePassword}
+                  pr='4.5rem'
+                  type={show ? 'text' : 'password'}
+                  />
+                <InputRightElement width='4.5rem'>
+                  <Button h='1.75rem' size='sm' onClick={handleClick}>
+                    {show ? (
+                      <Icon as={AiFillEyeInvisible} />
+                    ) : (
+                      <Icon as={AiFillEye} />
+                    )}
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
+            </div>
+          </div>
+
+          <Button 
+            backgroundColor={'#20D489'}
+            color={'white'}
+            marginTop={'24px'} 
+            size='md' 
+            onClick={handleSubmitForms}
+          >
+            Entrar
+          </Button>
+        </FormContainer>
+      </Container>
+
+      <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Altere sua senha!</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text mb='8px'>
+              Uma nova senha será enviada para o seu email após digitar um
+              email valido.
+            </Text>
+
             <Text mb='8px'>E-mail</Text>
             <InputGroup size='md'>
               <Input
-                isInvalid={invalidEmail}
-                value={email}
-                onChange={handleChangeEmail}
+                isInvalid={invalidForgetEmail}
+                value={forgetEmail}
+                onChange={handleChangeForgetEmail}
                 pr='4.5rem'
                 type='text'
                 />
             </InputGroup>
-          </div>
-          <div className="InputContainer">  
-            <Text mb='8px'>Senha</Text>
-            <InputGroup size='md'>
-              <Input
-                isInvalid={invalidPassword}
-                value={password}
-                onChange={handleChangePassword}
-                pr='4.5rem'
-                type={show ? 'text' : 'password'}
-                />
-              <InputRightElement width='4.5rem'>
-                <Button h='1.75rem' size='sm' onClick={handleClick}>
-                  {show ? (
-                    <Icon as={AiFillEyeInvisible} />
-                  ) : (
-                    <Icon as={AiFillEye} />
-                  )}
-                </Button>
-              </InputRightElement>
-            </InputGroup>
-          </div>
-        </div>
+          </ModalBody>
 
-        <Button 
-          backgroundColor={'#20D489'}
-          color={'white'}
-          marginTop={'24px'} 
-          size='md' 
-          onClick={handleSubmitForms}
-        >
-          Entrar
-        </Button>
-      </FormContainer>
-    </Container>
+          <ModalFooter>
+            <Button 
+              backgroundColor={'#20D489'}
+              color={'white'}
+              mr={3}
+              onClick={handleSubmitChangePassword}
+            >
+              Alterar Senha
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };
