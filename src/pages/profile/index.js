@@ -32,6 +32,7 @@ import {
 } from './styles';
 
 const Profile = () => {
+  const [email, setEmail] = React.useState('');
   const [name, setName] = React.useState('');
   const [pastPassword, setPastPassword] = React.useState('');
   const [newPassword, setNewPassword] = React.useState('');
@@ -49,31 +50,31 @@ const Profile = () => {
     const decoded = jwt_decode(token);
     
     setName(decoded.name);
+    setEmail(decoded.email);
   }, [token]);
 
   const nameSchema = Yup.object().shape({
     name: Yup.string()
       .required('Nome obrigatório')
-      .min(4, 'Nome de no minimo 8 caractéres')
+      .min(4, 'Nome de no minimo 8 caracteres')
   });
 
   const passwordSchema = Yup.object().shape({
     newPassword: Yup.string()
-      .min(8,'Senha de no minimo 8 caractéres')
+      .min(8,'Senha de no minimo 8 caracteres')
       .required('Senha obrigatória'),
-    pastPassword: Yup.string()
-      .min(8,'Senha de no minimo 8 caractéres')
-      .oneOf([Yup.ref('newPassword')], 'Senha não confere')
-      .required('Repetir senha obrigatório')
+    oldPassword: Yup.string()
+      .min(8,'Senha de no minimo 8 caracteres')
+      .required('Senha obrigatória')
   });
   
   const handleClick = () => setShow(!show);
 
   const handleChangeName = (event) => setName(event.target.value);
 
-  const handleChangePastPassword = (event) => setNewPassword(event.target.value);
+  const handleChangePastPassword = (event) => setPastPassword(event.target.value);
 
-  const handleChangeNewPassword = (event) => setPastPassword(event.target.value);
+  const handleChangeNewPassword = (event) => setNewPassword(event.target.value);
 
   const showErrorToast = (message) => {
     toast({
@@ -88,7 +89,8 @@ const Profile = () => {
     const UpdatePasswordUser = async () => {
       try{
         const userData = {
-          pastPassword,
+          email,
+          oldPassword: pastPassword,
           newPassword
         };
 
@@ -96,7 +98,7 @@ const Profile = () => {
           abortEarly: false,
         });
   
-        const responseData = await api.put("User", userData);
+        const responseData = await api.put("User/password", userData);
         const token = responseData.data.jwt;
 
         dispatch(
@@ -104,6 +106,8 @@ const Profile = () => {
             token
           })
         );
+
+        window.location.reload(false);
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
@@ -137,6 +141,7 @@ const Profile = () => {
     const UpdateNameUser = async () => {
       try{
         const userData = {
+          email,
           name
         };
 
@@ -152,6 +157,8 @@ const Profile = () => {
             token
           })
         );
+
+        window.location.reload(false);
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
@@ -241,6 +248,7 @@ const Profile = () => {
                 </InputRightElement>
               </InputGroup>
             </div>
+
             <div className="InputContainer">  
               <Text mb='8px'>Nova senha</Text>
               <InputGroup size='md'>

@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch, } from "react-redux";
 
 import jwt_decode from "jwt-decode";
+
+import authAction from "../../store/action/auth";
 
 import { 
   Text
@@ -15,8 +17,16 @@ import {
 } from './styles';
 
 const Header = () => {
+  const dispatch = useDispatch();
+
   const token = useSelector((state) => state.authReducer.token);
   const decoded = !!token ? jwt_decode(token) : null;
+
+  const handleLogOff = () => {
+    dispatch(
+      authAction.logOut()
+    );
+  }
 
   return (
     <>
@@ -50,6 +60,9 @@ const Header = () => {
               <Text fontSize='12px' color="#FFFFFF">{decoded.role}</Text>
             </div>
             <label>{decoded.name.charAt(0)}</label>
+            <button onClick={handleLogOff}>
+              <Text marginLeft="8px" fontSize='18px' color="#FFFFFF">Sair</Text>
+            </button>
           </HeaderUserContainer>
         </HeaderContainer>
     </>

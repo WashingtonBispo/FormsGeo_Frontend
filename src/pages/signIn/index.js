@@ -97,8 +97,12 @@ const SignIn = () => {
         });
         
         const responseData = await api.get("User", { params: { Email: userData.email, Password: userData.password } });
-        const token = responseData.data.jwt;
+        
+        if (responseData.status === 204)
+          throw "error";
 
+        const token = responseData.data.jwt;
+        
         dispatch(
           authAction.logIn({
             token
