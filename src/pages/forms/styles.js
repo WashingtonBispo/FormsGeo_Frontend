@@ -6,18 +6,27 @@ export const BodyContainer = styled.div`
   background-color: #F5F5F5;
 `;
 
-export const ResearchsContainer = styled.div`
-  background-color: white;
-  max-width: 1400px;
+export const SearchContainer = styled.div`
+  width: 100%;
+  padding-bottom: 20px;
+  background-color: #F5F5F5;
   margin: 0 auto;
+`;
+
+export const ResearchsContainer = styled.div`
+  background-color: #F5F5F5;
+  max-width: 1400px;
+  width: 96%;
+  margin: 0 2%;
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: wrap;
 `;
 
 export const ResearchContainer = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 8px;
 `;
 
 export const OptionsContainer = styled.div`
@@ -26,11 +35,11 @@ export const OptionsContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin: 18px 1%;
 `;
 
 export const AboutContainer = styled.div`
-  margin-bottom: 8px;
+  margin: 0 1% 18px 1%;
 `;
 
 export const InforContainer = styled.div`

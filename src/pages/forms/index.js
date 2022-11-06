@@ -1,4 +1,7 @@
-import React from "react";
+import React, { useCallback, useEffect } from "react";
+import { useDisclosure, useToast } from '@chakra-ui/react';
+
+import * as Yup from 'yup';
 
 import {
   Box,
@@ -6,7 +9,17 @@ import {
   useColorModeValue,
   Text,
   Tag,
-  TagLabel
+  TagLabel,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  InputGroup,
+  Input
 } from '@chakra-ui/react';
 
 import {
@@ -22,30 +35,107 @@ import {
   ResearchContainer,
   OptionsContainer,
   AboutContainer,
-  InforContainer
+  InforContainer,
+  SearchContainer
 } from './styles';
 
-import imgAvatar from '../../assets/pages/signIn/WomanChatting.png'
+import imgAvatar from '../../assets/pages/forms/Icon.png'
 
 const dataResearchs = [
   {
     title: "Pesquisa campus gama",
     description: "formulários relacionados a pesquisa da faculdade do gama",
-    status: "1",
+    status: 1,
     answers: "200",
     date: "30/02/2022"
   },
   {
     title: "Pesquisa campus gama",
     description: "formulários relacionados a pesquisa da faculdade do gama",
-    status: "2",
+    status: 2,
+    answers: "200",
+    date: "30/02/2022"
+  },
+  {
+    title: "Pesquisa campus gama",
+    description: "formulários relacionados a pesquisa da faculdade do gama",
+    status: 1,
+    answers: "200",
+    date: "30/02/2022"
+  },
+  {
+    title: "Pesquisa campus gama",
+    description: "formulários relacionados a pesquisa da faculdade do gama",
+    status: 1,
     answers: "200",
     date: "30/02/2022"
   }
 ]
 
 const SignIn = () => {
+  const [researchs, setResearchs] = React.useState([]);
+  const [searchInfor, setSearchInfor] = React.useState('');
+  const [name, setName]  = React.useState('');
+  const [linkTerm, setLinkTerm]  = React.useState('');
+  const [description, setDescription]  = React.useState('');
+  const [finalMessage, setFinalMessage]  = React.useState('');
+  const [invalidName, setInvalidName]  = React.useState(false);
+  const [invalidLinkTerm, setInvalidLinkTerm]  = React.useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const toast = useToast();
+
   const color = useColorModeValue('white', 'gray.700');
+
+  const showErrorToast = useCallback((message) => {
+    toast({
+      title: message,
+      position: "top-right",
+      status: "error",
+      isClosable: true,
+    });
+  }, [toast]);
+
+  const getResearchs = useCallback(async (filter) => {
+    try 
+    {
+      const responseData = dataResearchs;
+
+      setResearchs(responseData);
+    } catch (e)
+    {
+      showErrorToast("Ocorreu um erro ao listar os usuários.");
+    }
+  }, [showErrorToast])
+
+  useEffect(() => {
+    getResearchs();
+  }, [getResearchs]);
+
+  const handleChangeSearchInfor = useCallback((event) => {
+    const currentSearchInfor = event.target.value;
+
+    setSearchInfor(currentSearchInfor);
+
+    if (currentSearchInfor.length >= 3){
+      getResearchs(currentSearchInfor);
+    }else{
+      getResearchs();
+    }
+  }, [getResearchs]);
+
+  const schema = Yup.object().shape({
+    email: Yup.string()
+      .required('E-mail obrigatório')
+      .email('Digite um e-mail válido'),
+    password: Yup.string()
+      .min(8,'Senha de no minimo 8 caractéres')
+      .required('Senha obrigatória'),
+  });
+
+  const handleChangeName = (event) => setName(event.target.value);
+  
+  const handleChangeLinkTerm = (event) => setLinkTerm(event.target.value);
 
   const researchOptionHandle = (e, id) => {
     switch(e.value){
@@ -80,45 +170,71 @@ const SignIn = () => {
     
   }
 
+  const handleSubmitForm = () => {
+
+  }
+
   return (
     <>
       <Header />
 
-      <CurrentRoute name={"Pesquisas"} route={"Pesquisas"}/>
+      <Box
+        backgroundColor="#F5F5F5"
+        width="100%"
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <CurrentRoute name={"Pesquisas"} route={"Pesquisas"} />
+
+        <Button 
+            backgroundColor={'#20D489'}
+            color={'white'}
+            size='md' 
+            onClick={onOpen}
+            marginRight="2%"
+            >
+            Cadatrar Pesquisa
+        </Button>
+      </Box>
+
+      <SearchContainer>
+        <InputGroup size='md'>
+          <Input
+            value={searchInfor}
+            onChange={handleChangeSearchInfor}
+            placeholder="Buscar pesquisas"
+            backgroundColor="#DDDDDD"
+            maxWidth='800px'
+            margin="0 auto"
+            pr='4.5rem'
+            type='text'
+            />
+        </InputGroup>
+      </SearchContainer>
 
       <BodyContainer>
         <ResearchsContainer>
-          {dataResearchs.map((research) => {
+          {researchs.map((research) => {
             return (
               <Box
-                maxW={'33%'}
+                maxW={'32%'}
                 w={'full'}
                 bg={color}
                 boxShadow={'2xl'}
-                padding= "0 8px"
+                padding= "2%"
                 borderRadius="12px"
+                marginBottom="2%"
               >
                 <ResearchContainer>
                   <OptionsContainer>
                     <Avatar
-                      size={'xl'}
+                      width={'40px'}
                       src={imgAvatar}
                       alt={'Avatar Alt'}
-                      mb={4}
-                      pos={'relative'}
-                      _after={{
-                        content: '""',
-                        w: 4,
-                        h: 4,
-                        bg: 'green.300',
-                        border: '2px solid white',
-                        rounded: 'full',
-                        pos: 'absolute',
-                        bottom: 0,
-                        right: 3,
-                      }}/>
+                      />
 
-                    <Box>
+                    <Box width="160px">
                       <Select
                         className="basic-single"
                         placeholder="Opções"
@@ -181,18 +297,17 @@ const SignIn = () => {
 
                   <InforContainer>
                     <Box
-                      width='50%'
-                      marginRight='25%'
                       display='flex'
                       flexDirection='column'
                       justifyContent='center'
                       alignItems='center'
-                      border='1px dotted black'
+                      border='1px dotted #E4E6EF'
+                      borderRadius="8px"
+                      padding="2%"
                     >
                       <Text 
                         fontSize='18px' 
                         color="#3F4254" 
-                        marginLeft="8px"
                         fontWeight="bold"
                       >
                         {research.date}
@@ -201,7 +316,6 @@ const SignIn = () => {
                       <Text 
                         fontSize='18px' 
                         color="#3F4254" 
-                        marginLeft="8px"
                         fontWeight="bold"
                       >
                         desde
@@ -209,18 +323,17 @@ const SignIn = () => {
                     </Box>
 
                     <Box
-                      width='50%'
-                      marginLeft='25%'
                       display='flex'
                       flexDirection='column'
                       justifyContent='center'
                       alignItems='center'
-                      border='1px dotted black'
+                      border='1px dotted #E4E6EF'
+                      borderRadius="8px"
+                      padding="2%"
                     >
                       <Text 
                         fontSize='18px' 
                         color="#3F4254" 
-                        marginLeft="8px"
                         fontWeight="bold"
                       >
                         {research.answers}
@@ -229,7 +342,6 @@ const SignIn = () => {
                       <Text 
                         fontSize='18px' 
                         color="#3F4254" 
-                        marginLeft="8px"
                         fontWeight="bold"
                       >
                         respostas
@@ -242,6 +354,78 @@ const SignIn = () => {
           })}
         </ResearchsContainer>
       </BodyContainer>
+
+      <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader></ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <InputGroup size='md' marginTop="14px">
+              <Input
+                placeholder="Nome"
+                isInvalid={invalidName}
+                value={name}
+                onChange={handleChangeName}
+                pr='4.5rem'
+                type='text'
+                />
+            </InputGroup>
+            <InputGroup size='md' marginTop="8px">
+              <Input
+                placeholder="Link do termo de consentimento"
+                isInvalid={invalidLinkTerm}
+                value={linkTerm}
+                onChange={handleChangeLinkTerm}
+                pr='4.5rem'
+                type='text'
+                />
+            </InputGroup>
+            <InputGroup size='md' marginTop="8px">
+              <Input
+                placeholder="Nome"
+                isInvalid={invalidName}
+                value={name}
+                onChange={handleChangeName}
+                pr='4.5rem'
+                type='text'
+                />
+            </InputGroup>
+            <InputGroup size='md' marginTop="8px">
+              <Input
+                placeholder="Nome"
+                isInvalid={invalidName}
+                value={name}
+                onChange={handleChangeName}
+                pr='4.5rem'
+                type='text'
+                />
+            </InputGroup>
+          </ModalBody>
+
+          <ModalFooter 
+            display="flex"
+            justifyContent="space-between"
+          >
+            <Button 
+              backgroundColor={'#F5F8FA'}
+              color={'#7E8299'}
+              mr={3}
+              onClick={handleSubmitForm}
+            >
+              Voltar
+            </Button>
+            <Button 
+              backgroundColor={'#00A3FF'}
+              color={'white'}
+              mr={3}
+              onClick={handleSubmitForm}
+            >
+              Próximo
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </> 
   );
 };
