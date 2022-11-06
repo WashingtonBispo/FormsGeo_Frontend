@@ -48,3 +48,13 @@ export const InforContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
 `;
+
+export const AddResearchContainer = styled.div`
+  .img-icon {
+    cursor: pointer;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: row;
+    align-items: center
+  }
+`;

@@ -1,5 +1,9 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState, Component } from "react";
 import { useDisclosure, useToast } from '@chakra-ui/react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+import { compressImage, parsePictureToBase64 } from "../../utils/img"
 
 import * as Yup from 'yup';
 
@@ -26,6 +30,8 @@ import {
   Select,
 } from "chakra-react-select";
 
+import { MdOutlineAddCircle } from 'react-icons/md'
+
 import Header from "../../components/header";
 import CurrentRoute from "../../components/currentRoute";
 
@@ -36,7 +42,8 @@ import {
   OptionsContainer,
   AboutContainer,
   InforContainer,
-  SearchContainer
+  SearchContainer,
+  AddResearchContainer
 } from './styles';
 
 import imgAvatar from '../../assets/pages/forms/Icon.png'
@@ -73,18 +80,20 @@ const dataResearchs = [
 ]
 
 const SignIn = () => {
-  const [researchs, setResearchs] = React.useState([]);
-  const [searchInfor, setSearchInfor] = React.useState('');
-  const [name, setName]  = React.useState('');
-  const [linkTerm, setLinkTerm]  = React.useState('');
-  const [description, setDescription]  = React.useState('');
-  const [finalMessage, setFinalMessage]  = React.useState('');
-  const [invalidName, setInvalidName]  = React.useState(false);
-  const [invalidLinkTerm, setInvalidLinkTerm]  = React.useState(false);
+  const [researchs, setResearchs] = useState([]);
+  const [searchInfor, setSearchInfor] = useState('');
+  const [name, setName]  = useState('');
+  const [linkTerm, setLinkTerm]  = useState('');
+  const [description, setDescription]  = useState('');
+  const [finalMessage, setFinalMessage]  = useState('');
+  const [invalidName, setInvalidName]  = useState(false);
+  const [invalidLinkTerm, setInvalidLinkTerm]  = useState(false);
+  const [icon, setIcon] = useState(null);
+  const [hasImg, setHasImg] = useState(false);
+
   const { isOpen, onOpen, onClose } = useDisclosure();
-
   const toast = useToast();
-
+  
   const color = useColorModeValue('white', 'gray.700');
 
   const showErrorToast = useCallback((message) => {
@@ -125,12 +134,8 @@ const SignIn = () => {
   }, [getResearchs]);
 
   const schema = Yup.object().shape({
-    email: Yup.string()
-      .required('E-mail obrigatório')
-      .email('Digite um e-mail válido'),
-    password: Yup.string()
-      .min(8,'Senha de no minimo 8 caractéres')
-      .required('Senha obrigatória'),
+    name: Yup.string()
+      .required('Nome obrigatório')
   });
 
   const handleChangeName = (event) => setName(event.target.value);
@@ -170,8 +175,47 @@ const SignIn = () => {
     
   }
 
-  const handleSubmitForm = () => {
+  const handleInputChange = async (tempPicture) => {
+    const newFile = {
+      file: tempPicture[0],
+      url: URL.createObjectURL(tempPicture[0]),
+    };
 
+    setHasImg(true);
+    setIcon(newFile);
+  };
+
+  const compressPicture = async (pic) => {
+    try {
+      return await compressImage(pic.file);
+    } catch {
+      showErrorToast("Ocorreu um erro ao comprimir o icone.");
+    }
+    return null;
+  };
+
+  const handleSubmitForm = () => {
+    const postForm = async () => {
+      let base64Image;
+
+      if (hasImg) {
+        const compressedPicture = await compressPicture(icon);
+        if (compressedPicture)
+          base64Image = await parsePictureToBase64(compressedPicture);
+      }
+
+      const postData = {
+        name,
+        linkTerm,
+        description,
+        finalMessage,
+        icon: base64Image.replace('data:image/png;base64,', '')
+      }
+
+      console.log(postData);
+    }
+
+    postForm();
   }
 
   return (
@@ -361,46 +405,93 @@ const SignIn = () => {
           <ModalHeader></ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <InputGroup size='md' marginTop="14px">
-              <Input
-                placeholder="Nome"
-                isInvalid={invalidName}
-                value={name}
-                onChange={handleChangeName}
-                pr='4.5rem'
-                type='text'
-                />
-            </InputGroup>
-            <InputGroup size='md' marginTop="8px">
-              <Input
-                placeholder="Link do termo de consentimento"
-                isInvalid={invalidLinkTerm}
-                value={linkTerm}
-                onChange={handleChangeLinkTerm}
-                pr='4.5rem'
-                type='text'
-                />
-            </InputGroup>
-            <InputGroup size='md' marginTop="8px">
-              <Input
-                placeholder="Nome"
-                isInvalid={invalidName}
-                value={name}
-                onChange={handleChangeName}
-                pr='4.5rem'
-                type='text'
-                />
-            </InputGroup>
-            <InputGroup size='md' marginTop="8px">
-              <Input
-                placeholder="Nome"
-                isInvalid={invalidName}
-                value={name}
-                onChange={handleChangeName}
-                pr='4.5rem'
-                type='text'
-                />
-            </InputGroup>
+            <AddResearchContainer>
+              <InputGroup 
+                size='md' 
+                marginTop="14px"
+                display="flex"
+                flexDir="column"
+              >
+                <label
+                  className="img-icon"
+                  htmlFor="research-icon"
+                >
+                  <input
+                    style={{display: "none"}}
+                    type="file"
+                    id="research-icon"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleInputChange(e.target.files);
+                      }
+                    }}
+                  />
+
+                  <MdOutlineAddCircle />
+                  
+                  {!hasImg ? (
+                    <Text
+                      fontSize='18px' 
+                      color="#3F4254"
+                    >
+                      Adicionar ícone
+                    </Text>
+                  ) : (
+                    <Text
+                      fontSize='18px' 
+                      color="#3F4254"
+                    >
+                      {icon.file.name}
+                    </Text>
+                  )}
+                  
+                </label>
+
+                <Input
+                  placeholder="Nome"
+                  isInvalid={invalidName}
+                  value={name}
+                  onChange={handleChangeName}
+                  pr='4.5rem'
+                  type='text'
+                  marginBottom="8px"
+                  />
+
+                <Input
+                  placeholder="Link do termo de consentimento"
+                  isInvalid={invalidLinkTerm}
+                  value={linkTerm}
+                  onChange={handleChangeLinkTerm}
+                  pr='4.5rem'
+                  type='text'
+                  marginBottom="8px"
+                  />
+
+                <Box
+                  marginBottom="8px"
+                >
+                  <CKEditor
+                    editor={ ClassicEditor }
+                    data="<p>Descrição e termo de  consentimento</p>"
+                    onChange={ ( event, editor ) => {
+                      const data = editor.getData();
+                      setDescription(data);
+                  } }
+                  />
+                </Box>
+                
+                <Box>
+                  <CKEditor
+                    editor={ ClassicEditor }
+                    data="<p>Mensagem final</p>"
+                    onChange={ ( event, editor ) => {
+                      const data = editor.getData();
+                      setFinalMessage(data);
+                  } }
+                  />
+                </Box>
+              </InputGroup>
+            </AddResearchContainer>
           </ModalBody>
 
           <ModalFooter 
