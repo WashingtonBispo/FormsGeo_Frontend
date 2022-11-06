@@ -46,7 +46,7 @@ export const parseBase64ToPicture = async (picture) => {
   return pic;
 };
 
-export const parseBase64ToPictures = async (pictures: any[]) => {
+export const parseBase64ToPictures = async (pictures) => {
   const promises = pictures.map((item, idx) =>
     imageCompression.getFilefromDataUrl(
       `data:image/png;base64,${item.bin}`,
