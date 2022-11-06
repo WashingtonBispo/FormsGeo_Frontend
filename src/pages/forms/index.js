@@ -350,7 +350,7 @@ const SignIn = () => {
                       padding="2%"
                     >
                       <Text 
-                        fontSize='18px' 
+                        fontSize='16px' 
                         color="#3F4254" 
                         fontWeight="bold"
                       >
@@ -358,7 +358,7 @@ const SignIn = () => {
                       </Text>
 
                       <Text 
-                        fontSize='18px' 
+                        fontSize='16px' 
                         color="#3F4254" 
                         fontWeight="bold"
                       >
@@ -376,7 +376,7 @@ const SignIn = () => {
                       padding="2%"
                     >
                       <Text 
-                        fontSize='18px' 
+                        fontSize='16px' 
                         color="#3F4254" 
                         fontWeight="bold"
                       >
@@ -384,7 +384,7 @@ const SignIn = () => {
                       </Text>
 
                       <Text 
-                        fontSize='18px' 
+                        fontSize='16px' 
                         color="#3F4254" 
                         fontWeight="bold"
                       >
