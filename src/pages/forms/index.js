@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useState, Component } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDisclosure, useToast } from '@chakra-ui/react';
+import { useSelector } from "react-redux";
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import jwt_decode from "jwt-decode";
 
 import { compressImage, parsePictureToBase64 } from "../../utils/img"
 
@@ -32,6 +34,8 @@ import {
 
 import { MdOutlineAddCircle } from 'react-icons/md'
 
+import { api } from "../../services/api";
+
 import Header from "../../components/header";
 import CurrentRoute from "../../components/currentRoute";
 
@@ -48,39 +52,13 @@ import {
 
 import imgAvatar from '../../assets/pages/forms/Icon.png'
 
-const dataResearchs = [
-  {
-    title: "Pesquisa campus gama",
-    description: "formulários relacionados a pesquisa da faculdade do gama",
-    status: 1,
-    answers: "200",
-    date: "30/02/2022"
-  },
-  {
-    title: "Pesquisa campus gama",
-    description: "formulários relacionados a pesquisa da faculdade do gama",
-    status: 2,
-    answers: "200",
-    date: "30/02/2022"
-  },
-  {
-    title: "Pesquisa campus gama",
-    description: "formulários relacionados a pesquisa da faculdade do gama",
-    status: 1,
-    answers: "200",
-    date: "30/02/2022"
-  },
-  {
-    title: "Pesquisa campus gama",
-    description: "formulários relacionados a pesquisa da faculdade do gama",
-    status: 1,
-    answers: "200",
-    date: "30/02/2022"
-  }
-]
-
-const SignIn = () => {
+const Forms = () => {
+  const token = useSelector((state) => state.authReducer.token);
+  const color = useColorModeValue('white', 'gray.700');
+  
+  const [email, setEmail] = useState('');
   const [researchs, setResearchs] = useState([]);
+  const [count, setCount] = useState(0);
   const [searchInfor, setSearchInfor] = useState('');
   const [name, setName]  = useState('');
   const [linkTerm, setLinkTerm]  = useState('');
@@ -93,8 +71,6 @@ const SignIn = () => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  
-  const color = useColorModeValue('white', 'gray.700');
 
   const showErrorToast = useCallback((message) => {
     toast({
@@ -105,12 +81,12 @@ const SignIn = () => {
     });
   }, [toast]);
 
-  const getResearchs = useCallback(async (filter) => {
+  const getResearchs = useCallback(async (email) => {
     try 
     {
-      const responseData = dataResearchs;
+      const responseData = await api.get("Form/List", { params: { email: email } });
 
-      setResearchs(responseData);
+      setResearchs(responseData.data);
     } catch (e)
     {
       showErrorToast("Ocorreu um erro ao listar os usuários.");
@@ -118,8 +94,12 @@ const SignIn = () => {
   }, [showErrorToast])
 
   useEffect(() => {
-    getResearchs();
-  }, [getResearchs]);
+    const decoded = jwt_decode(token);
+    
+    setEmail(decoded.email);
+
+    getResearchs(decoded.email);
+  }, [getResearchs, count]);
 
   const handleChangeSearchInfor = useCallback((event) => {
     const currentSearchInfor = event.target.value;
@@ -145,13 +125,13 @@ const SignIn = () => {
   const researchOptionHandle = (e, id) => {
     switch(e.value){
       case "Ativar":
-        enableResearch(id);
+        changeStatusResearch(id, 1);
         break;
       case "Compartilhar":
-        disableResearch(id);
+        return;
         break;
       case "Finalizar":
-        finishResearch(id);
+        changeStatusResearch(id, 3);
         break;
       case "Deletar":
         deleteResearch(id);
@@ -159,20 +139,40 @@ const SignIn = () => {
     }
   };
 
-  const enableResearch = (id) => {
-
-  }
-
-  const disableResearch = (id) => {
-    
-  }
-
-  const finishResearch = (id) => {
-    
+  const changeStatusResearch = (id, status) => {
+    const HandleResearch = async (id, status) => {
+      try{
+        const researchData = {
+          formId: id,
+          status
+        };
+        
+        await api.put("Form/", researchData);
+        setCount(count + 1);
+      }
+      catch (err){
+        showErrorToast("Ocorreu um erro ao remover um usuário.");
+      }
+    }
+    HandleResearch(id, status);
   }
 
   const deleteResearch = (id) => {
+    const HandleResearch = async (id) => {
+      try{
+        const researchData = {
+          formId: id
+        };
+        
+        await api.delete("Form/", researchData);
+        setCount(count + 1);
+      }
+      catch (err){
+        showErrorToast("Ocorreu um erro ao remover um usuário.");
+      }
+    }
     
+    HandleResearch(id);
   }
 
   const handleInputChange = async (tempPicture) => {
@@ -205,14 +205,19 @@ const SignIn = () => {
       }
 
       const postData = {
+        email,
         name,
-        linkTerm,
+        linkConsent: linkTerm,
         description,
         finalMessage,
+        gatherEnd: false,
+        gatherPassage: false,
         icon: base64Image.replace('data:image/png;base64,', '')
       }
 
-      console.log(postData);
+      await api.post("Form", postData);
+
+      setCount(count + 1);
     }
 
     postForm();
@@ -282,7 +287,7 @@ const SignIn = () => {
                       <Select
                         className="basic-single"
                         placeholder="Opções"
-                        onChange={(e) => {researchOptionHandle(e, dataResearchs.id)}}
+                        onChange={(e) => {researchOptionHandle(e, research.idForm)}}
                         options={[
                           {
                             label: "Ativar",
@@ -311,7 +316,7 @@ const SignIn = () => {
                         color="#181C32"
                         fontWeight="bold"
                       >
-                        {research.title}
+                        {research.name}
                     </Text>
 
                     <Text 
@@ -354,7 +359,7 @@ const SignIn = () => {
                         color="#3F4254" 
                         fontWeight="bold"
                       >
-                        {research.date}
+                        {research.createdAt.substring(0, 10).replaceAll("-", "/")}
                       </Text>
 
                       <Text 
@@ -380,7 +385,7 @@ const SignIn = () => {
                         color="#3F4254" 
                         fontWeight="bold"
                       >
-                        {research.answers}
+                        {12/*research.answers*/}
                       </Text>
 
                       <Text 
@@ -521,4 +526,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default Forms;
