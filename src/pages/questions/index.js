@@ -126,6 +126,8 @@ const Questions = () => {
   const getOpenAnswerQuestion = () => {
     return {
       index: questionsList.length+1,
+      question: "",
+      alternatives: [1],
       type: 0
     }
   }
@@ -133,6 +135,8 @@ const Questions = () => {
   const getLikertQuestion = () => {
     return {
       index: questionsList.length+1,
+      question: "",
+      alternatives: [],
       type: 1
     }
   }
@@ -140,6 +144,8 @@ const Questions = () => {
   const getAncLikertQuestion = () => {
     return {
       index: questionsList.length+1,
+      question: "",
+      alternatives: [],
       type: 2
     }
   }
@@ -147,6 +153,8 @@ const Questions = () => {
   const getMultipleChoiceQuestion = () => {
     return {
       index: questionsList.length+1,
+      question: "",
+      alternatives: [],
       type: 3
     }
   }
@@ -154,6 +162,8 @@ const Questions = () => {
   const getSelectionBoxQuestion = () => {
     return {
       index: questionsList.length+1,
+      question: "",
+      alternatives: [],
       type: 4
     }
   }
@@ -212,19 +222,40 @@ const Questions = () => {
     switch(questionsList[showedQuestion].type)
     {
       case 0:
-        return (<OpenAnswer />);
+        return (
+          <OpenAnswer 
+            questionsList={questionsList} 
+            setQuestionsList={setQuestionsList} 
+            index={showedQuestion} 
+          />);
 
       case 1:
-        return (<Likert />);
+        return (<Likert 
+            questionsList={questionsList} 
+            setQuestionsList={setQuestionsList} 
+            index={showedQuestion} 
+          />);
 
       case 2:
-        return (<AncLikert />);
+        return (<AncLikert 
+            questionsList={questionsList} 
+            setQuestionsList={setQuestionsList} 
+            index={showedQuestion} 
+          />);
 
       case 3:
-        return (<MultipleQuestion />);
+        return (<MultipleQuestion 
+            questionsList={questionsList} 
+            setQuestionsList={setQuestionsList} 
+            index={showedQuestion} 
+          />);
 
       case 4:
-        return (<SelectionBox />);
+        return (<SelectionBox 
+            questionsList={questionsList} 
+            setQuestionsList={setQuestionsList} 
+            index={showedQuestion} 
+          />);
       
       default:
         return (<></>);
@@ -367,7 +398,6 @@ const Questions = () => {
                 </Box>
               );
             })}
-            
           </QuestionsListContainer>
         </Box>
 

@@ -9,29 +9,22 @@ import {
   QuestionContainer
 } from './styles';
 
-const MultipleQuestion = () => {
-  const [question, setQuestion] = useState('');
+import QuestionHeader from '../QuestionHeader';
+
+const MultipleQuestion = (props) => {
+  const index = props.index;
+  const questionsList = props.questionsList;
+  const setQuestionsList = props.setQuestionsList;
 
   return (
     <>
       <QuestionContainer>
-        <Text 
-          fontSize='20px' 
-          color="#3F4254" 
-          marginLeft="8px"
-          marginBottom="8px"
-          fontWeight="bold"
-        >
-          Múltipla escolha
-        </Text>
-
-        <Textarea
-          border="1px solid #E4E6EF !important"
-          defaultValue={question}
-          onChange={e => setQuestion(e)} 
-          placeholder='Pergunta'
+        <QuestionHeader 
+          name={"Múltipla escolha"}
+          questionsList={questionsList} 
+          setQuestionsList={setQuestionsList} 
+          index={index} 
         />
-
       </QuestionContainer>
     </>
   );

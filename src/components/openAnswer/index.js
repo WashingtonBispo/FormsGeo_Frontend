@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { 
   Text,
-  Textarea,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
@@ -15,28 +14,29 @@ import {
   QuestionOptionContainer
 } from './styles';
 
-const OpenAnswer = () => {
-  const [question, setQuestion] = useState('');
-  const [maxWords, setMaxWords] = useState(1);
+import QuestionHeader from '../QuestionHeader';
+
+const OpenAnswer = (props) => {
+  const index = props.index;
+  const questionsList = props.questionsList;
+  const setQuestionsList = props.setQuestionsList;
+
+  const handleMaxWordInput = (e) => {
+    let tempQuestionList = questionsList.map(q => q);
+
+    tempQuestionList[index].alternatives[0] = e;
+
+    setQuestionsList(tempQuestionList);
+  }
 
   return (
     <>
       <QuestionContainer>
-        <Text 
-          fontSize='20px' 
-          color="#3F4254" 
-          marginLeft="8px"
-          marginBottom="8px"
-          fontWeight="bold"
-        >
-          Resposta aberta
-        </Text>
-
-        <Textarea
-          border="1px solid #E4E6EF !important"
-          defaultValue={question}
-          onChange={e => setQuestion(e)} 
-          placeholder='Pergunta'
+        <QuestionHeader 
+          name={"Resposta aberta"}
+          questionsList={questionsList} 
+          setQuestionsList={setQuestionsList} 
+          index={index} 
         />
 
         <QuestionOptionContainer>
@@ -48,8 +48,8 @@ const OpenAnswer = () => {
           </Text>
 
           <NumberInput 
-            onChange={e => setMaxWords(e)}
-            defaultValue={maxWords} 
+            onChange={e => handleMaxWordInput(e)}
+            defaultValue={questionsList[index].alternatives[0]} 
             min={1}
             clampValueOnBlur={false}
           >
