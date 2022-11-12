@@ -4,21 +4,11 @@ import { useToast } from '@chakra-ui/react'
 
 import {
   Box,
-  Avatar,
   useColorModeValue,
   Text,
   Tag,
   TagLabel,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  InputGroup,
-  Input,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
@@ -43,17 +33,33 @@ import { api } from "../../services/api";
 
 import Header from "../../components/header";
 import CurrentRoute from "../../components/currentRoute";
+import OpenAnswer from "../../components/openAnswer";
+import MultipleQuestion from "../../components/multipleQuestion";
+import SelectionBox from "../../components/selectionBox";
+import AncLikert from "../../components/ancLikert";
+import Likert from "../../components/likert";
 
 import {
   BodyContainer,
   QuestionsListContainer,
   AddQuestionContainer,
   AddQuestionBody,
+  ButtonIconContainer,
   AddQuestionButtonContainer
 } from './styles';
 
 const Questions = () => {
+  const questionTypes = [
+    "Resposta aberta",
+    "Escala likert ancorada",
+    "Escala likert ancorada nas pontas",
+    "Múltipla escolha",
+    "Caixas de seleção"
+  ]
+
+  const [questionsList, setQuestionsList] = useState([]);
   const [pageItens, setPageItens] = useState(5);
+  const [showedQuestion, setShowedQuestion] = useState(0);
   const [show, setShow] = useState(false);
 
   const toast = useToast();
@@ -78,6 +84,151 @@ const Questions = () => {
       status: "error",
       isClosable: true,
     });
+  }
+
+  const addQuestion = (type) => {
+    let tempQuestionList = questionsList.map(q => q);
+    let questionData;
+
+    switch(type)
+    {
+      case 0:
+        questionData = getOpenAnswerQuestion();
+        break;
+
+      case 1:
+        questionData = getLikertQuestion();
+        break;
+
+      case 2:
+        questionData = getAncLikertQuestion();
+        break;
+
+      case 3:
+        questionData = getMultipleChoiceQuestion();
+        break;
+
+      case 4:
+        questionData = getSelectionBoxQuestion();
+        break;
+      
+      default:
+        return;
+    }
+
+    tempQuestionList = [...tempQuestionList, questionData]
+
+    setQuestionsList(tempQuestionList);
+
+    setShowedQuestion(tempQuestionList.length - 1);
+  }
+
+  const getOpenAnswerQuestion = () => {
+    return {
+      index: questionsList.length+1,
+      type: 0
+    }
+  }
+
+  const getLikertQuestion = () => {
+    return {
+      index: questionsList.length+1,
+      type: 1
+    }
+  }
+
+  const getAncLikertQuestion = () => {
+    return {
+      index: questionsList.length+1,
+      type: 2
+    }
+  }
+
+  const getMultipleChoiceQuestion = () => {
+    return {
+      index: questionsList.length+1,
+      type: 3
+    }
+  }
+
+  const getSelectionBoxQuestion = () => {
+    return {
+      index: questionsList.length+1,
+      type: 4
+    }
+  }
+
+  const swapUpQuestion = (i) => {
+    i--;
+
+    let tempQuestionList = questionsList.map(q => q);
+
+    // swap index
+    tempQuestionList[i].index--;
+    tempQuestionList[i - 1].index++;
+
+    // swap question
+    var tempQuestion = tempQuestionList[i];
+    tempQuestionList[i] = tempQuestionList[i - 1];
+    tempQuestionList[i - 1] = tempQuestion;
+
+    setQuestionsList(tempQuestionList);
+  }
+
+  const swapDownQuestion = (i) => {
+    i--;
+
+    let tempQuestionList = questionsList.map(q => q);
+
+    // swap index
+    tempQuestionList[i].index++;
+    tempQuestionList[i + 1].index--;
+
+    // swap question
+    var tempQuestion = tempQuestionList[i];
+    tempQuestionList[i] = tempQuestionList[i + 1];
+    tempQuestionList[i + 1] = tempQuestion;
+
+    setQuestionsList(tempQuestionList);
+  }
+
+  const deleteQuestion = (i) => {
+    let tempQuestionList = questionsList.map(q => q);
+
+    tempQuestionList.splice(i-1, 1);
+
+    if (tempQuestionList.length > 0){
+      let newIndex = 1;
+      
+      tempQuestionList.forEach(q => q.index = newIndex++)
+    }
+
+    setShowedQuestion(0);
+
+    setQuestionsList(tempQuestionList);
+  } 
+
+  const renderQuestion = () => {
+    switch(questionsList[showedQuestion].type)
+    {
+      case 0:
+        return (<OpenAnswer />);
+
+      case 1:
+        return (<Likert />);
+
+      case 2:
+        return (<AncLikert />);
+
+      case 3:
+        return (<MultipleQuestion />);
+
+      case 4:
+        return (<SelectionBox />);
+      
+      default:
+        return (<></>);
+    }
   }
 
   return (
@@ -110,66 +261,113 @@ const Questions = () => {
             </NumberInputStepper>
           </NumberInput>
 
-          <Menu>
-            <MenuButton
-              as={IconButton}
-              aria-label='AddQuestion'
-              icon={<AiFillFileAdd />}
-              variant='outline'
-            />
-            <MenuList>
-              <MenuItem command='⌘T'>
-                New Tab
-              </MenuItem>
-              <MenuItem command='⌘N'>
-                New Window
-              </MenuItem>
-              <MenuItem command='⌘⇧N'>
-                Open Closed Tab
-              </MenuItem>
-              <MenuItem command='⌘O'>
-                Open File...
-              </MenuItem>
-            </MenuList>
-          </Menu>
+          <Box
+            margin="12px 0"
+            display="flex"
+            justifyContent="right"
+          >
+            <Menu>
+              <MenuButton
+                
+                as={IconButton}
+                aria-label='AddQuestion'
+                icon={<AiFillFileAdd />}
+                variant='outline'
+                />
+              <MenuList>
+                <MenuItem
+                  onClick={() => {addQuestion(0)}}
+                >
+                  Resposta aberta
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {addQuestion(1)}}
+                >
+                  Escala likert ancorada
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {addQuestion(2)}}
+                >
+                  Escala likert ancorada nas pontas
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {addQuestion(3)}}
+                >
+                  Múltipla escolha
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {addQuestion(4)}}
+                >
+                  Caixa de seleção
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          </Box>
 
           <QuestionsListContainer>
-            <Tag 
-              size={'md'} 
-              key={'md'} 
-              variant='subtle'
-              backgroundColor={'#F1FAFF'}
-              color={'#00A3FF'}
-            >
-              <TagLabel>1</TagLabel>
-            </Tag>
+            {questionsList.map((question) => {
+              return (
+                <Box 
+                  key={question.index}
+                  width="100%"
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  margin="6px 0"
+                >
+                  <Tag 
+                    onClick={() => setShowedQuestion(question.index - 1)}
+                    size={'md'} 
+                    key={'md'} 
+                    variant='subtle'
+                    backgroundColor={'#F1FAFF'}
+                    color={'#00A3FF'}
+                    >
+                    <TagLabel>{question.index}</TagLabel>
+                  </Tag>
 
-            <Text 
-              fontSize='18px' 
-              color="#3F4254" 
-              marginLeft="8px"
-            >
-              Resposta Aberta
-            </Text>
+                  <Text 
+                    onClick={() => setShowedQuestion(question.index - 1)}
+                    fontSize='18px' 
+                    color="#3F4254" 
+                    marginLeft="8px"
+                    >
+                    {questionTypes[question.type]}
+                  </Text>
 
-            <IconButton
-              marginLeft={'4px'}
-              aria-label='UpQuestion'
-              icon={<BsFillArrowUpSquareFill />}
-              variant='outline'
-            />
-            <IconButton
-              marginLeft={'4px'}
-              aria-label='DownQuestion'
-              icon={<BsFillArrowDownSquareFill />}
-              variant='outline'
-            />
-            <IconButton
-              marginLeft={'4px'}
-              aria-label='DeleteQuestion'
-              icon={<FaTrashAlt />}
-              variant='outline'
-            />
+                  <ButtonIconContainer>
+                    <IconButton
+                      onClick={() => {swapUpQuestion(question.index)}}
+                      marginLeft={'4px'}
+                      aria-label='UpQuestion'
+                      icon={<BsFillArrowUpSquareFill />}
+                      variant='outline'
+                    />
+                    
+                    <IconButton
+                      onClick={() => {swapDownQuestion(question.index)}}
+                      marginLeft={'4px'}
+                      aria-label='DownQuestion'
+                      icon={<BsFillArrowDownSquareFill />}
+                      variant='outline'
+                    />
+                    
+                    <IconButton
+                      onClick={() => {deleteQuestion(question.index)}}
+                      marginLeft={'4px'}
+                      aria-label='DeleteQuestion'
+                      icon={<FaTrashAlt />}
+                      variant='outline'
+                    />
+                  </ButtonIconContainer>
+                </Box>
+              );
+            })}
+            
           </QuestionsListContainer>
         </Box>
 
@@ -184,7 +382,11 @@ const Questions = () => {
         >
           <AddQuestionContainer>
             <AddQuestionBody>
-              <p>aqui</p>
+              {questionsList.length == 0 ? (
+                <></>
+              ) : (
+                renderQuestion()
+              )}
             </AddQuestionBody>
 
             <AddQuestionButtonContainer>
