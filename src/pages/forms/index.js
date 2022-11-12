@@ -5,7 +5,7 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import jwt_decode from "jwt-decode";
 
-import { compressImage, parsePictureToBase64 } from "../../utils/img"
+import { compressImage, parsePictureToBase64, parseBase64ToPicture } from "../../utils/img"
 
 import * as Yup from 'yup';
 
@@ -60,16 +60,18 @@ const Forms = () => {
   const [researchs, setResearchs] = useState([]);
   const [count, setCount] = useState(0);
   const [searchInfor, setSearchInfor] = useState('');
-  const [name, setName]  = useState('');
-  const [linkTerm, setLinkTerm]  = useState('');
-  const [description, setDescription]  = useState('');
-  const [finalMessage, setFinalMessage]  = useState('');
-  const [invalidName, setInvalidName]  = useState(false);
-  const [invalidLinkTerm, setInvalidLinkTerm]  = useState(false);
+  const [name, setName] = useState('');
+  const [linkTerm, setLinkTerm] = useState('');
+  const [description, setDescription] = useState('');
+  const [finalMessage, setFinalMessage] = useState('');
+  const [invalidName, setInvalidName] = useState(false);
+  const [invalidLinkTerm, setInvalidLinkTerm] = useState(false);
   const [icon, setIcon] = useState(null);
   const [hasImg, setHasImg] = useState(false);
+  const [shareLink, setShareLink] = useState('');
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenResearch, onOpen: onOpenResearch, onClose: onCloseResearch } = useDisclosure();
+  const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
   const toast = useToast();
 
   const showErrorToast = useCallback((message) => {
@@ -84,9 +86,16 @@ const Forms = () => {
   const getResearchs = useCallback(async (email) => {
     try 
     {
-      const responseData = await api.get("Form/List", { params: { email: email } });
+      const response = await api.get("Form/List", { params: { email: email } });
 
-      setResearchs(responseData.data);
+      let responseData = response.data;
+
+      for (let i = 0; i < responseData.length; i++){
+        const imgUrl = await parseBase64ToPicture(responseData[i].icon);
+        responseData[i].icon = imgUrl.url;
+      }
+
+      setResearchs(responseData);
     } catch (e)
     {
       showErrorToast("Ocorreu um erro ao listar os usuários.");
@@ -128,7 +137,8 @@ const Forms = () => {
         changeStatusResearch(id, 1);
         break;
       case "Compartilhar":
-        return;
+        setShareLink(id);
+        onOpenShareResearch();
         break;
       case "Finalizar":
         changeStatusResearch(id, 3);
@@ -240,7 +250,7 @@ const Forms = () => {
             backgroundColor={'#20D489'}
             color={'white'}
             size='md' 
-            onClick={onOpen}
+            onClick={onOpenResearch}
             marginRight="2%"
             >
             Cadatrar Pesquisa
@@ -279,7 +289,7 @@ const Forms = () => {
                   <OptionsContainer>
                     <Avatar
                       width={'40px'}
-                      src={imgAvatar}
+                      src={research.icon}
                       alt={'Avatar Alt'}
                       />
 
@@ -404,7 +414,7 @@ const Forms = () => {
         </ResearchsContainer>
       </BodyContainer>
 
-      <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose}>
+      <Modal blockScrollOnMount={false} isOpen={isOpenResearch} onClose={onCloseResearch}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader></ModalHeader>
@@ -518,6 +528,50 @@ const Forms = () => {
               onClick={handleSubmitForm}
             >
               Próximo
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal blockScrollOnMount={false} isOpen={isOpenShareResearch} onClose={onCloseShareResearch}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <Text 
+              fontSize='16px' 
+              color="#3F4254"
+            >
+              Compartilhe este código com os participantes de sua pesquisa!
+            </Text>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody
+            display="flex"
+            justifyContent="center"
+          >
+            <Text 
+              fontSize='15px' 
+              color="#3F4254"
+              width="100%"
+              border="2px dotted #E4E6EF"
+              padding="4px"
+              textAlign="center"
+            >
+              {shareLink}
+            </Text>
+          </ModalBody>
+
+          <ModalFooter 
+            display="flex"
+            justifyContent="center"
+          >
+            <Button 
+              backgroundColor={'#F5F8FA'}
+              color={'#7E8299'}
+              mr={3}
+              onClick={handleSubmitForm}
+            >
+              Voltar
             </Button>
           </ModalFooter>
         </ModalContent>

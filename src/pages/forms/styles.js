@@ -17,7 +17,7 @@ export const ResearchsContainer = styled.div`
   background-color: #F5F5F5;
   max-width: 1400px;
   width: 96%;
-  margin: 0 2%;
+  margin: 0 auto;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
