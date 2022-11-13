@@ -5,6 +5,8 @@ import { useSelector } from 'react-redux';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import jwt_decode from 'jwt-decode';
+import parse from 'html-react-parser';
+import DOMPurify from 'dompurify';
 
 import { compressImage, parsePictureToBase64, parseBase64ToPicture } from '../../utils/img'
 
@@ -35,6 +37,7 @@ import {
 
 import { MdOutlineAddCircle } from 'react-icons/md'
 
+import getValidationErrors from '../../utils/getValidationErrors'
 import { api } from '../../services/api';
 
 import Header from '../../components/header';
@@ -54,7 +57,50 @@ import {
 const Forms = () => {
   const token = useSelector((state) => state.authReducer.token);
   const color = useColorModeValue('white', 'gray.700');
+
+  const adminOptions = [
+    {
+      label: 'Ativar',
+      value: 'Ativar',
+    },
+    {
+      label: 'Editar',
+      value: 'Editar',
+    },
+    {
+      label: 'Compartilhar',
+      value: 'Compartilhar'
+    },
+    {
+      label: 'Finalizar',
+      value: 'Finalizar'
+    },
+    {
+      label: 'Deletar',
+      value: 'Deletar'
+    }
+  ]
+
+  const userOptions = [
+    {
+      label: 'Ativar',
+      value: 'Ativar',
+    },
+    {
+      label: 'Editar',
+      value: 'Editar',
+    },
+    {
+      label: 'Compartilhar',
+      value: 'Compartilhar'
+    },
+    {
+      label: 'Finalizar',
+      value: 'Finalizar'
+    }
+  ]
   
+  const [isAdmin, setIsAdmin] = useState(false);
   const [researchId, setResearchId] = useState(null);
   const [email, setEmail] = useState('');
   const [researchs, setResearchs] = useState([]);
@@ -65,7 +111,6 @@ const Forms = () => {
   const [description, setDescription] = useState('<p>Descrição e termo de  consentimento</p>');
   const [finalMessage, setFinalMessage] = useState('<p>Mensagem final</p>');
   const [invalidName, setInvalidName] = useState(false);
-  const [invalidLinkTerm, setInvalidLinkTerm] = useState(false);
   const [icon, setIcon] = useState(null);
   const [hasImg, setHasImg] = useState(false);
   const [shareLink, setShareLink] = useState('');
@@ -109,6 +154,8 @@ const Forms = () => {
     const decoded = jwt_decode(token);
     
     setEmail(decoded.email);
+    
+    if(decoded.role == "Admin") setIsAdmin(true);
 
     getResearchs(decoded.email);
   }, [getResearchs, count, token]);
@@ -128,6 +175,7 @@ const Forms = () => {
   const schema = Yup.object().shape({
     name: Yup.string()
       .required('Nome obrigatório')
+    
   });
 
   const handleChangeName = (event) => setName(event.target.value);
@@ -235,30 +283,60 @@ const Forms = () => {
     return null;
   };
 
+  const htmlFrom = (htmlString) => {
+    const cleanHtmlString = DOMPurify.sanitize(htmlString,
+      { USE_PROFILES: { html: true } });
+    const html = parse(cleanHtmlString);
+    return html;
+}
+
   const handleSubmitForm = () => {
     const postForm = async () => {
-      let base64Image;
+      try{
+        let base64Image;
 
-      if (hasImg) {
-        const compressedPicture = await compressPicture(icon);
-        if (compressedPicture)
-          base64Image = await parsePictureToBase64(compressedPicture);
+        if (hasImg) {
+          const compressedPicture = await compressPicture(icon);
+          if (compressedPicture)
+            base64Image = await parsePictureToBase64(compressedPicture);
+        }
+        
+        const postData = {
+          email,
+          name,
+          linkConsent: linkTerm,
+          description,
+          finalMessage,
+          gatherEnd: false,
+          gatherPassage: false,
+          icon: base64Image.replace('data:image/png;base64,', '')
+        }
+
+        await schema.validate(postData, {
+          abortEarly: false,
+        });
+
+        await api.post('Form', postData);
+
+        navigate('/questoes');
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          if (errors.name != undefined){
+            showErrorToast(errors.name);
+            setInvalidName(true);
+          }
+          else
+            setInvalidName(false);
+
+          return;
+        }else{
+          showErrorToast("Ocorreu um erro ao fazer o cadastro do formulário de pesquisa.");
+
+          return;
+        }
       }
-
-      const postData = {
-        email,
-        name,
-        linkConsent: linkTerm,
-        description,
-        finalMessage,
-        gatherEnd: false,
-        gatherPassage: false,
-        icon: base64Image.replace('data:image/png;base64,', '')
-      }
-
-      await api.post('Form', postData);
-
-      navigate('/questoes');
     }
 
     postForm();
@@ -266,29 +344,52 @@ const Forms = () => {
 
   const handleEditForm = () => {
     const editForm = async () => {
-      let base64Image;
+      try{
+        let base64Image;
 
-      if (hasImg) {
-        const compressedPicture = await compressPicture(icon);
-        if (compressedPicture)
-          base64Image = await parsePictureToBase64(compressedPicture);
+        if (hasImg) {
+          const compressedPicture = await compressPicture(icon);
+          if (compressedPicture)
+            base64Image = await parsePictureToBase64(compressedPicture);
+        }
+
+        const putData = {
+          email,
+          formId: researchId,
+          name,
+          linkConsent: linkTerm,
+          description,
+          finalMessage,
+          gatherEnd: false,
+          gatherPassage: false,
+          icon: !base64Image ? '' : base64Image.replace('data:image/png;base64,', '')
+        }
+
+        await schema.validate(putData, {
+          abortEarly: false,
+        });
+
+        await api.put('Form', putData);
+
+        navigate('/questoes');
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          if (errors.name != undefined){
+            showErrorToast(errors.name);
+            setInvalidName(true);
+          }
+          else
+            setInvalidName(false);
+
+          return;
+        }else{
+          showErrorToast("Ocorreu um erro ao fazer o cadastro do formulário de pesquisa.");
+
+          return;
+        }
       }
-
-      const putData = {
-        email,
-        formId: researchId,
-        name,
-        linkConsent: linkTerm,
-        description,
-        finalMessage,
-        gatherEnd: false,
-        gatherPassage: false,
-        icon: !base64Image ? '' : base64Image.replace('data:image/png;base64,', '')
-      }
-
-      await api.put('Form', putData);
-
-      navigate('/questoes');
     }
 
     editForm();
@@ -363,28 +464,7 @@ const Forms = () => {
                         className='basic-single'
                         placeholder='Opções'
                         onChange={(e) => {researchOptionHandle(e, research.idForm)}}
-                        options={[
-                          {
-                            label: 'Ativar',
-                            value: 'Ativar',
-                          },
-                          {
-                            label: 'Editar',
-                            value: 'Editar',
-                          },
-                          {
-                            label: 'Compartilhar',
-                            value: 'Compartilhar'
-                          },
-                          {
-                            label: 'Finalizar',
-                            value: 'Finalizar'
-                          },
-                          {
-                            label: 'Deletar',
-                            value: 'Deletar'
-                          }
-                        ]}
+                        options={isAdmin ? adminOptions : userOptions}
                       />
                     </Box>
                   </OptionsContainer>
@@ -399,11 +479,37 @@ const Forms = () => {
                     </Text>
 
                     <Text 
-                        fontSize='16px' 
-                        color='#B5B5C3'
-                      >
-                        {research.description}
+                      fontSize='16px' 
+                      color='#B5B5C3'
+                    >
+                      {research.description && htmlFrom(research.description)}
                     </Text>
+
+                    {isAdmin ? (
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        marginBottom="4px"
+                      >
+                        <Text 
+                          fontSize='14px' 
+                          color='#5E6278'
+                          fontWeight='bold'
+                        >
+                          Pesquisador: 
+                        </Text>
+
+                        <Text 
+                          fontSize='16px' 
+                          color='#B5B5C3'
+                          marginLeft="4px"
+                        >
+                          {"pesquisador"}
+                        </Text>
+                      </Box>
+                    ) : (
+                      <></>
+                    )}
                     
                     <Text 
                         fontSize='14px' 
@@ -545,7 +651,6 @@ const Forms = () => {
 
                 <Input
                   placeholder='Link do termo de consentimento'
-                  isInvalid={invalidLinkTerm}
                   value={linkTerm}
                   onChange={handleChangeLinkTerm}
                   pr='4.5rem'
