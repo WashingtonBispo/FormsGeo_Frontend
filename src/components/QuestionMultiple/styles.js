@@ -6,7 +6,7 @@ export const QuestionContainer = styled.div`
   padding: 12px;
 `;
 
-export const SelectionBoxContainer = styled.div`
+export const QuestionMultipleContainer = styled.div`
   border: 1px dotted #5E6278;
   border-radius: 8px;
   padding: 12px;

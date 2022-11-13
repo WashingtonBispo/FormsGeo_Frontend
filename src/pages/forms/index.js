@@ -35,9 +35,9 @@ import {
   Select,
 } from 'chakra-react-select';
 
-import { MdOutlineAddCircle } from 'react-icons/md'
+import { MdOutlineAddCircle } from 'react-icons/md';
 
-import getValidationErrors from '../../utils/getValidationErrors'
+import getValidationErrors from '../../utils/getValidationErrors';
 import { api } from '../../services/api';
 
 import Header from '../../components/header';

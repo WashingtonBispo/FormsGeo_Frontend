@@ -34,8 +34,7 @@ import { api } from "../../services/api";
 import Header from "../../components/header";
 import CurrentRoute from "../../components/currentRoute";
 import OpenAnswer from "../../components/openAnswer";
-import MultipleQuestion from "../../components/multipleQuestion";
-import SelectionBox from "../../components/selectionBox";
+import QuestionMultiple from "../../components/QuestionMultiple";
 import AncLikert from "../../components/ancLikert";
 import Likert from "../../components/likert";
 
@@ -57,6 +56,8 @@ const Questions = () => {
     "Caixas de seleção"
   ]
 
+  const [questionMultipleAlternative, setQuestionMultipleAlternative] = useState('');
+  const [invalidQuestionMultipleAlternative, setInvalidQuestionMultipleAlternative] = useState(false);
   const [questionsList, setQuestionsList] = useState([]);
   const [pageItens, setPageItens] = useState(5);
   const [showedQuestion, setShowedQuestion] = useState(0);
@@ -121,6 +122,12 @@ const Questions = () => {
     setQuestionsList(tempQuestionList);
 
     setShowedQuestion(tempQuestionList.length - 1);
+  }
+
+  const changeShowedQuestion = (index) => {
+    setQuestionMultipleAlternative('');
+    setInvalidQuestionMultipleAlternative(false);
+    setShowedQuestion(index - 1);
   }
 
   const getOpenAnswerQuestion = () => {
@@ -226,7 +233,7 @@ const Questions = () => {
           <OpenAnswer 
             questionsList={questionsList} 
             setQuestionsList={setQuestionsList} 
-            index={showedQuestion} 
+            index={showedQuestion}
           />);
 
       case 1:
@@ -244,17 +251,27 @@ const Questions = () => {
           />);
 
       case 3:
-        return (<MultipleQuestion 
+        return (<QuestionMultiple 
             questionsList={questionsList} 
             setQuestionsList={setQuestionsList} 
             index={showedQuestion} 
+            title={"Múltipla escolha"}
+            alternative={questionMultipleAlternative}
+            setAlternative={setQuestionMultipleAlternative}
+            invalidAlternative={invalidQuestionMultipleAlternative}
+            setInvalidAlternative={setInvalidQuestionMultipleAlternative}
           />);
 
       case 4:
-        return (<SelectionBox 
+        return (<QuestionMultiple 
             questionsList={questionsList} 
             setQuestionsList={setQuestionsList} 
             index={showedQuestion} 
+            title={"Caixa de seleção"}
+            alternative={questionMultipleAlternative}
+            setAlternative={setQuestionMultipleAlternative}
+            invalidAlternative={invalidQuestionMultipleAlternative}
+            setInvalidAlternative={setInvalidQuestionMultipleAlternative}
           />);
       
       default:
@@ -351,7 +368,7 @@ const Questions = () => {
                   margin="6px 0"
                 >
                   <Tag 
-                    onClick={() => setShowedQuestion(question.index - 1)}
+                    onClick={() => {changeShowedQuestion(question.index)}}
                     size={'md'} 
                     key={'md'} 
                     variant='subtle'
@@ -362,7 +379,7 @@ const Questions = () => {
                   </Tag>
 
                   <Text 
-                    onClick={() => setShowedQuestion(question.index - 1)}
+                    onClick={() => {changeShowedQuestion(question.index)}}
                     fontSize='18px' 
                     color="#3F4254" 
                     marginLeft="8px"
