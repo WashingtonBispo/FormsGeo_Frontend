@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import { useDispatch } from "react-redux";
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@chakra-ui/react'
 
 import {
@@ -63,6 +63,7 @@ const Questions = () => {
   const [showedQuestion, setShowedQuestion] = useState(0);
   const [show, setShow] = useState(false);
 
+  const navigate = useNavigate();
   const toast = useToast();
   const color = useColorModeValue('white', 'gray.700');
   
@@ -152,7 +153,7 @@ const Questions = () => {
     return {
       index: questionsList.length+1,
       question: "",
-      alternatives: [],
+      alternatives: ["", "", "1", 0],
       type: 2
     }
   }
@@ -240,7 +241,11 @@ const Questions = () => {
         return (<Likert 
             questionsList={questionsList} 
             setQuestionsList={setQuestionsList} 
-            index={showedQuestion} 
+            index={showedQuestion}
+            alternative={questionMultipleAlternative}
+            setAlternative={setQuestionMultipleAlternative}
+            invalidAlternative={invalidQuestionMultipleAlternative}
+            setInvalidAlternative={setInvalidQuestionMultipleAlternative}
           />);
 
       case 2:
@@ -277,6 +282,28 @@ const Questions = () => {
       default:
         return (<></>);
     }
+  }
+  
+  const handleSubmitQuestion = () => {
+    const postForm = async () => {
+      try{
+        const postData = {
+          questions: questionsList
+        }
+
+        await schema.validate(postData, {
+          abortEarly: false,
+        });
+
+        navigate('/');
+      } catch (err) {
+        showErrorToast("Ocorreu um erro ao fazer o cadastro do formulário de pesquisa.");
+
+        return;
+      }
+    }
+
+    postForm();
   }
 
   return (
@@ -446,7 +473,8 @@ const Questions = () => {
                 Voltar
               </Button>
 
-              <Button 
+              <Button
+                onClick={handleSubmitQuestion}
                 backgroundColor={'#00A3FF'}
                 color={'white'}
                 marginTop={'24px'} 
