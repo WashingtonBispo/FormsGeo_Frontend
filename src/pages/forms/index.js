@@ -131,10 +131,15 @@ const Forms = () => {
     });
   }, [toast]);
 
-  const getResearchs = useCallback(async (email) => {
+  const getResearchs = useCallback(async (email, filter) => {
     try 
     {
-      const response = await api.get('Form/List', { params: { email: email } });
+      let response = null;
+
+      if (isAdmin)
+        response = await api.get('Form/List', { params: { email: email, filter: filter } });
+      else
+        response = await api.get('Form/List', { params: { filter: filter } });
 
       let responseData = response.data;
 
@@ -155,7 +160,10 @@ const Forms = () => {
     
     setEmail(decoded.email);
     
-    if(decoded.role == "Admin") setIsAdmin(true);
+    if(decoded.role == "Admin"){
+      setIsAdmin(true);
+      getResearchs();
+    }
 
     getResearchs(decoded.email);
   }, [getResearchs, count, token]);
@@ -166,9 +174,9 @@ const Forms = () => {
     setSearchInfor(currentSearchInfor);
 
     if (currentSearchInfor.length >= 3){
-      getResearchs(currentSearchInfor);
+      isAdmin ? getResearchs(null, currentSearchInfor) : getResearchs(email, currentSearchInfor);
     }else{
-      getResearchs();
+      isAdmin ? getResearchs(null) : getResearchs(email);
     }
   }, [getResearchs]);
 
