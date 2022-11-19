@@ -49,7 +49,7 @@ const OpenAnswer = (props) => {
 
           <NumberInput 
             onChange={e => handleMaxWordInput(e)}
-            defaultValue={questionsList[index].alternatives[0]} 
+            value={questionsList[index].alternatives[0]} 
             min={1}
             clampValueOnBlur={false}
           >

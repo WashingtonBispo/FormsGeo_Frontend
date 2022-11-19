@@ -1,11 +1,14 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDisclosure, useToast } from '@chakra-ui/react';
-import { useSelector } from "react-redux";
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import jwt_decode from "jwt-decode";
+import jwt_decode from 'jwt-decode';
+import parse from 'html-react-parser';
+import DOMPurify from 'dompurify';
 
-import { compressImage, parsePictureToBase64 } from "../../utils/img"
+import { compressImage, parsePictureToBase64, parseBase64ToPicture } from '../../utils/img'
 
 import * as Yup from 'yup';
 
@@ -30,14 +33,15 @@ import {
 
 import {
   Select,
-} from "chakra-react-select";
+} from 'chakra-react-select';
 
-import { MdOutlineAddCircle } from 'react-icons/md'
+import { MdOutlineAddCircle } from 'react-icons/md';
 
-import { api } from "../../services/api";
+import getValidationErrors from '../../utils/getValidationErrors';
+import { api } from '../../services/api';
 
-import Header from "../../components/header";
-import CurrentRoute from "../../components/currentRoute";
+import Header from '../../components/header';
+import CurrentRoute from '../../components/currentRoute';
 
 import {
   BodyContainer,
@@ -50,46 +54,104 @@ import {
   AddResearchContainer
 } from './styles';
 
-import imgAvatar from '../../assets/pages/forms/Icon.png'
-
 const Forms = () => {
   const token = useSelector((state) => state.authReducer.token);
   const color = useColorModeValue('white', 'gray.700');
+
+  const adminOptions = [
+    {
+      label: 'Ativar',
+      value: 'Ativar',
+    },
+    {
+      label: 'Editar',
+      value: 'Editar',
+    },
+    {
+      label: 'Compartilhar',
+      value: 'Compartilhar'
+    },
+    {
+      label: 'Finalizar',
+      value: 'Finalizar'
+    },
+    {
+      label: 'Deletar',
+      value: 'Deletar'
+    }
+  ]
+
+  const userOptions = [
+    {
+      label: 'Ativar',
+      value: 'Ativar',
+    },
+    {
+      label: 'Editar',
+      value: 'Editar',
+    },
+    {
+      label: 'Compartilhar',
+      value: 'Compartilhar'
+    },
+    {
+      label: 'Finalizar',
+      value: 'Finalizar'
+    }
+  ]
   
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [researchId, setResearchId] = useState(null);
   const [email, setEmail] = useState('');
   const [researchs, setResearchs] = useState([]);
   const [count, setCount] = useState(0);
   const [searchInfor, setSearchInfor] = useState('');
-  const [name, setName]  = useState('');
-  const [linkTerm, setLinkTerm]  = useState('');
-  const [description, setDescription]  = useState('');
-  const [finalMessage, setFinalMessage]  = useState('');
-  const [invalidName, setInvalidName]  = useState(false);
-  const [invalidLinkTerm, setInvalidLinkTerm]  = useState(false);
+  const [name, setName] = useState('');
+  const [linkTerm, setLinkTerm] = useState('');
+  const [description, setDescription] = useState('<p>Descrição e termo de  consentimento</p>');
+  const [finalMessage, setFinalMessage] = useState('<p>Mensagem final</p>');
+  const [invalidName, setInvalidName] = useState(false);
   const [icon, setIcon] = useState(null);
   const [hasImg, setHasImg] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [isEdit, setIsEdit] = useState(false);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenResearch, onOpen: onOpenResearch, onClose: onCloseResearch } = useDisclosure();
+  const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
+  
   const toast = useToast();
+  const navigate = useNavigate();
 
   const showErrorToast = useCallback((message) => {
     toast({
       title: message,
-      position: "top-right",
-      status: "error",
+      position: 'top-right',
+      status: 'error',
       isClosable: true,
     });
   }, [toast]);
 
-  const getResearchs = useCallback(async (email) => {
+  const getResearchs = useCallback(async (email, filter) => {
     try 
     {
-      const responseData = await api.get("Form/List", { params: { email: email } });
+      let response = null;
 
-      setResearchs(responseData.data);
+      if (isAdmin)
+        response = await api.get('Form/List', { params: { email: email, filter: filter } });
+      else
+        response = await api.get('Form/List', { params: { filter: filter } });
+
+      let responseData = response.data;
+
+      for (let i = 0; i < responseData.length; i++){
+        const imgUrl = await parseBase64ToPicture(responseData[i].icon);
+        responseData[i].icon = imgUrl;
+      }
+
+      setResearchs(responseData);
     } catch (e)
     {
-      showErrorToast("Ocorreu um erro ao listar os usuários.");
+      showErrorToast('Ocorreu um erro ao listar os usuários.');
     }
   }, [showErrorToast])
 
@@ -97,9 +159,14 @@ const Forms = () => {
     const decoded = jwt_decode(token);
     
     setEmail(decoded.email);
+    
+    if(decoded.role == "Admin"){
+      setIsAdmin(true);
+      getResearchs();
+    }
 
     getResearchs(decoded.email);
-  }, [getResearchs, count]);
+  }, [getResearchs, count, token]);
 
   const handleChangeSearchInfor = useCallback((event) => {
     const currentSearchInfor = event.target.value;
@@ -107,35 +174,65 @@ const Forms = () => {
     setSearchInfor(currentSearchInfor);
 
     if (currentSearchInfor.length >= 3){
-      getResearchs(currentSearchInfor);
+      isAdmin ? getResearchs(null, currentSearchInfor) : getResearchs(email, currentSearchInfor);
     }else{
-      getResearchs();
+      isAdmin ? getResearchs(null) : getResearchs(email);
     }
   }, [getResearchs]);
 
   const schema = Yup.object().shape({
     name: Yup.string()
       .required('Nome obrigatório')
+    
   });
 
   const handleChangeName = (event) => setName(event.target.value);
   
   const handleChangeLinkTerm = (event) => setLinkTerm(event.target.value);
 
+  const handlePopulateEditModal = (id) => {
+    const research = researchs.find(r => r.idForm === id);
+
+    setResearchId(id);
+    setHasImg(true);
+    setIcon(research.icon);
+    setName(research.name);
+    setLinkTerm(research.linkConsent);
+    setDescription(research.description);
+    setFinalMessage(research.finalMessage);
+  }
+
+  const handleClearModal = () => {
+    setHasImg(false);
+    setIcon(null);
+    setName('');
+    setLinkTerm('');
+    setDescription('<p>Descrição e termo de  consentimento</p>');
+    setFinalMessage('<p>Mensagem final</p>');
+  }
+
   const researchOptionHandle = (e, id) => {
     switch(e.value){
-      case "Ativar":
+      case 'Ativar':
         changeStatusResearch(id, 1);
         break;
-      case "Compartilhar":
-        return;
+      case 'Editar':
+        handlePopulateEditModal(id);
+        setIsEdit(true); 
+        onOpenResearch();
         break;
-      case "Finalizar":
+      case 'Compartilhar':
+        setShareLink(id);
+        onOpenShareResearch();
+        break;
+      case 'Finalizar':
         changeStatusResearch(id, 3);
         break;
-      case "Deletar":
+      case 'Deletar':
         deleteResearch(id);
         break;
+      default:
+        return;
     }
   };
 
@@ -147,11 +244,11 @@ const Forms = () => {
           status
         };
         
-        await api.put("Form/", researchData);
+        await api.put('Form/', researchData);
         setCount(count + 1);
       }
       catch (err){
-        showErrorToast("Ocorreu um erro ao remover um usuário.");
+        showErrorToast('Ocorreu um erro ao remover um usuário.');
       }
     }
     HandleResearch(id, status);
@@ -164,11 +261,11 @@ const Forms = () => {
           formId: id
         };
         
-        await api.delete("Form/", researchData);
+        await api.delete('Form/', researchData);
         setCount(count + 1);
       }
       catch (err){
-        showErrorToast("Ocorreu um erro ao remover um usuário.");
+        showErrorToast('Ocorreu um erro ao remover um usuário.');
       }
     }
     
@@ -189,38 +286,121 @@ const Forms = () => {
     try {
       return await compressImage(pic.file);
     } catch {
-      showErrorToast("Ocorreu um erro ao comprimir o icone.");
+      showErrorToast('Ocorreu um erro ao comprimir o icone.');
     }
     return null;
   };
 
+  const htmlFrom = (htmlString) => {
+    const cleanHtmlString = DOMPurify.sanitize(htmlString,
+      { USE_PROFILES: { html: true } });
+    const html = parse(cleanHtmlString);
+    return html;
+}
+
   const handleSubmitForm = () => {
     const postForm = async () => {
-      let base64Image;
+      try{
+        let base64Image;
 
-      if (hasImg) {
-        const compressedPicture = await compressPicture(icon);
-        if (compressedPicture)
-          base64Image = await parsePictureToBase64(compressedPicture);
+        if (hasImg) {
+          const compressedPicture = await compressPicture(icon);
+          if (compressedPicture)
+            base64Image = await parsePictureToBase64(compressedPicture);
+        }
+        
+        const postData = {
+          email,
+          name,
+          linkConsent: linkTerm,
+          description,
+          finalMessage,
+          gatherEnd: false,
+          gatherPassage: false,
+          icon: base64Image.replace('data:image/png;base64,', '')
+        }
+
+        await schema.validate(postData, {
+          abortEarly: false,
+        });
+
+        await api.post('Form', postData);
+
+        navigate('/questoes');
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          if (errors.name != undefined){
+            showErrorToast(errors.name);
+            setInvalidName(true);
+          }
+          else
+            setInvalidName(false);
+
+          return;
+        }else{
+          showErrorToast("Ocorreu um erro ao fazer o cadastro do formulário de pesquisa.");
+
+          return;
+        }
       }
-
-      const postData = {
-        email,
-        name,
-        linkConsent: linkTerm,
-        description,
-        finalMessage,
-        gatherEnd: false,
-        gatherPassage: false,
-        icon: base64Image.replace('data:image/png;base64,', '')
-      }
-
-      await api.post("Form", postData);
-
-      setCount(count + 1);
     }
 
     postForm();
+  }
+
+  const handleEditForm = () => {
+    const editForm = async () => {
+      try{
+        let base64Image;
+
+        if (hasImg) {
+          const compressedPicture = await compressPicture(icon);
+          if (compressedPicture)
+            base64Image = await parsePictureToBase64(compressedPicture);
+        }
+
+        const putData = {
+          email,
+          formId: researchId,
+          name,
+          linkConsent: linkTerm,
+          description,
+          finalMessage,
+          gatherEnd: false,
+          gatherPassage: false,
+          icon: !base64Image ? '' : base64Image.replace('data:image/png;base64,', '')
+        }
+
+        await schema.validate(putData, {
+          abortEarly: false,
+        });
+
+        await api.put('Form', putData);
+
+        navigate('/questoes');
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          if (errors.name != undefined){
+            showErrorToast(errors.name);
+            setInvalidName(true);
+          }
+          else
+            setInvalidName(false);
+
+          return;
+        }else{
+          showErrorToast("Ocorreu um erro ao fazer o cadastro do formulário de pesquisa.");
+
+          return;
+        }
+      }
+    }
+
+    editForm();
   }
 
   return (
@@ -228,20 +408,23 @@ const Forms = () => {
       <Header />
 
       <Box
-        backgroundColor="#F5F5F5"
-        width="100%"
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
+        backgroundColor='#F5F5F5'
+        width='100%'
+        display='flex'
+        justifyContent='space-between'
+        alignItems='center'
       >
-        <CurrentRoute name={"Pesquisas"} route={"Pesquisas"} />
+        <CurrentRoute name={'Pesquisas'} route={'Pesquisas'} />
 
         <Button 
             backgroundColor={'#20D489'}
             color={'white'}
             size='md' 
-            onClick={onOpen}
-            marginRight="2%"
+            onClick={() => {
+              setIsEdit(false); 
+              onOpenResearch();
+            }}
+            marginRight='2%'
             >
             Cadatrar Pesquisa
         </Button>
@@ -252,10 +435,10 @@ const Forms = () => {
           <Input
             value={searchInfor}
             onChange={handleChangeSearchInfor}
-            placeholder="Buscar pesquisas"
-            backgroundColor="#DDDDDD"
+            placeholder='Buscar pesquisas'
+            backgroundColor='#DDDDDD'
             maxWidth='800px'
-            margin="0 auto"
+            margin='0 auto'
             pr='4.5rem'
             type='text'
             />
@@ -267,45 +450,29 @@ const Forms = () => {
           {researchs.map((research) => {
             return (
               <Box
+                key={research.idForm}
                 maxW={'32%'}
                 w={'full'}
                 bg={color}
                 boxShadow={'2xl'}
-                padding= "2%"
-                borderRadius="12px"
-                marginBottom="2%"
+                padding= '2%'
+                borderRadius='12px'
+                marginBottom='2%'
               >
                 <ResearchContainer>
                   <OptionsContainer>
                     <Avatar
                       width={'40px'}
-                      src={imgAvatar}
+                      src={research.icon.url}
                       alt={'Avatar Alt'}
                       />
 
-                    <Box width="160px">
+                    <Box width='160px'>
                       <Select
-                        className="basic-single"
-                        placeholder="Opções"
+                        className='basic-single'
+                        placeholder='Opções'
                         onChange={(e) => {researchOptionHandle(e, research.idForm)}}
-                        options={[
-                          {
-                            label: "Ativar",
-                            value: "Ativar",
-                          },
-                          {
-                            label: "Compartilhar",
-                            value: "Compartilhar"
-                          },
-                          {
-                            label: "Finalizar",
-                            value: "Finalizar"
-                          },
-                          {
-                            label: "Deletar",
-                            value: "Deletar"
-                          }
-                        ]}
+                        options={isAdmin ? adminOptions : userOptions}
                       />
                     </Box>
                   </OptionsContainer>
@@ -313,33 +480,59 @@ const Forms = () => {
                   <AboutContainer>
                     <Text 
                         fontSize='22px' 
-                        color="#181C32"
-                        fontWeight="bold"
+                        color='#181C32'
+                        fontWeight='bold'
                       >
                         {research.name}
                     </Text>
 
                     <Text 
-                        fontSize='16px' 
-                        color="#B5B5C3"
-                      >
-                        {research.description}
+                      fontSize='16px' 
+                      color='#B5B5C3'
+                    >
+                      {research.description && htmlFrom(research.description)}
                     </Text>
+
+                    {isAdmin ? (
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        marginBottom="4px"
+                      >
+                        <Text 
+                          fontSize='14px' 
+                          color='#5E6278'
+                          fontWeight='bold'
+                        >
+                          Pesquisador: 
+                        </Text>
+
+                        <Text 
+                          fontSize='16px' 
+                          color='#B5B5C3'
+                          marginLeft="4px"
+                        >
+                          {"pesquisador"}
+                        </Text>
+                      </Box>
+                    ) : (
+                      <></>
+                    )}
                     
                     <Text 
                         fontSize='14px' 
-                        color="#5E6278"
-                        fontWeight="bold"
+                        color='#5E6278'
+                        fontWeight='bold'
                       >
                         status: 
                         <Tag 
-                          size={"md"} 
-                          key={"md"} 
+                          size={'md'} 
+                          key={'md'} 
                           variant='subtle' 
                           color={research.status === 1 ? '#62DBA9' : '#F64E60'}
                           marginLeft='8px'
                           >
-                          <TagLabel>{research.status === 1 ? "Ativo" : "Finalizado"}</TagLabel>
+                          <TagLabel>{research.status === 1 ? 'Ativo' : 'Finalizado'}</TagLabel>
                         </Tag>
                     </Text>
                   </AboutContainer>
@@ -351,21 +544,21 @@ const Forms = () => {
                       justifyContent='center'
                       alignItems='center'
                       border='1px dotted #E4E6EF'
-                      borderRadius="8px"
-                      padding="2%"
+                      borderRadius='8px'
+                      padding='2%'
                     >
                       <Text 
                         fontSize='16px' 
-                        color="#3F4254" 
-                        fontWeight="bold"
+                        color='#3F4254' 
+                        fontWeight='bold'
                       >
-                        {research.createdAt.substring(0, 10).replaceAll("-", "/")}
+                        {research.createdAt.substring(0, 10).replaceAll('-', '/')}
                       </Text>
 
                       <Text 
                         fontSize='16px' 
-                        color="#3F4254" 
-                        fontWeight="bold"
+                        color='#3F4254' 
+                        fontWeight='bold'
                       >
                         desde
                       </Text>
@@ -377,21 +570,21 @@ const Forms = () => {
                       justifyContent='center'
                       alignItems='center'
                       border='1px dotted #E4E6EF'
-                      borderRadius="8px"
-                      padding="2%"
+                      borderRadius='8px'
+                      padding='2%'
                     >
                       <Text 
                         fontSize='16px' 
-                        color="#3F4254" 
-                        fontWeight="bold"
+                        color='#3F4254' 
+                        fontWeight='bold'
                       >
                         {12/*research.answers*/}
                       </Text>
 
                       <Text 
                         fontSize='16px' 
-                        color="#3F4254" 
-                        fontWeight="bold"
+                        color='#3F4254' 
+                        fontWeight='bold'
                       >
                         respostas
                       </Text>
@@ -404,27 +597,29 @@ const Forms = () => {
         </ResearchsContainer>
       </BodyContainer>
 
-      <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose}>
+      <Modal blockScrollOnMount={false} isOpen={isOpenResearch} onClose={onCloseResearch}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader></ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton 
+            onClick={handleClearModal}
+          />
           <ModalBody>
             <AddResearchContainer>
               <InputGroup 
                 size='md' 
-                marginTop="14px"
-                display="flex"
-                flexDir="column"
+                marginTop='14px'
+                display='flex'
+                flexDir='column'
               >
                 <label
-                  className="img-icon"
-                  htmlFor="research-icon"
+                  className='img-icon'
+                  htmlFor='research-icon'
                 >
                   <input
-                    style={{display: "none"}}
-                    type="file"
-                    id="research-icon"
+                    style={{display: 'none'}}
+                    type='file'
+                    id='research-icon'
                     onChange={(e) => {
                       if (e.target.files && e.target.files.length > 0) {
                         handleInputChange(e.target.files);
@@ -437,14 +632,14 @@ const Forms = () => {
                   {!hasImg ? (
                     <Text
                       fontSize='18px' 
-                      color="#3F4254"
+                      color='#3F4254'
                     >
                       Adicionar ícone
                     </Text>
                   ) : (
                     <Text
                       fontSize='18px' 
-                      color="#3F4254"
+                      color='#3F4254'
                     >
                       {icon.file.name}
                     </Text>
@@ -453,31 +648,34 @@ const Forms = () => {
                 </label>
 
                 <Input
-                  placeholder="Nome"
+                  placeholder='Nome'
                   isInvalid={invalidName}
                   value={name}
                   onChange={handleChangeName}
                   pr='4.5rem'
                   type='text'
-                  marginBottom="8px"
+                  marginBottom='8px'
                   />
 
                 <Input
-                  placeholder="Link do termo de consentimento"
-                  isInvalid={invalidLinkTerm}
+                  placeholder='Link do termo de consentimento'
                   value={linkTerm}
                   onChange={handleChangeLinkTerm}
                   pr='4.5rem'
                   type='text'
-                  marginBottom="8px"
+                  marginBottom='8px'
                   />
 
                 <Box
-                  marginBottom="8px"
+                  marginBottom='8px'
                 >
                   <CKEditor
                     editor={ ClassicEditor }
-                    data="<p>Descrição e termo de  consentimento</p>"
+                    data={description}
+                    onFocus={() => {
+                      if (description === '<p>Descrição e termo de  consentimento</p>')
+                        setDescription('');
+                    }}
                     onChange={ ( event, editor ) => {
                       const data = editor.getData();
                       setDescription(data);
@@ -488,7 +686,11 @@ const Forms = () => {
                 <Box>
                   <CKEditor
                     editor={ ClassicEditor }
-                    data="<p>Mensagem final</p>"
+                    data={finalMessage}
+                    onFocus={() => {
+                      if (finalMessage === '<p>Mensagem final</p>')
+                        setFinalMessage('');
+                    }}
                     onChange={ ( event, editor ) => {
                       const data = editor.getData();
                       setFinalMessage(data);
@@ -500,24 +702,80 @@ const Forms = () => {
           </ModalBody>
 
           <ModalFooter 
-            display="flex"
-            justifyContent="space-between"
+            display='flex'
+            justifyContent='space-between'
           >
             <Button 
               backgroundColor={'#F5F8FA'}
               color={'#7E8299'}
               mr={3}
-              onClick={handleSubmitForm}
+              onClick={handleClearModal}
             >
               Voltar
             </Button>
-            <Button 
-              backgroundColor={'#00A3FF'}
-              color={'white'}
-              mr={3}
-              onClick={handleSubmitForm}
+
+            {isEdit ? (
+              <Button 
+                backgroundColor={'#00A3FF'}
+                color={'white'}
+                mr={3}
+                onClick={handleEditForm}
+              >
+                Editar questões
+              </Button>
+            ) : (
+              <Button 
+                backgroundColor={'#00A3FF'}
+                color={'white'}
+                mr={3}
+                onClick={handleSubmitForm}
+              >
+                Próximo
+              </Button>
+            )}
+            
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal blockScrollOnMount={false} isOpen={isOpenShareResearch} onClose={onCloseShareResearch}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <Text 
+              fontSize='16px' 
+              color='#3F4254'
             >
-              Próximo
+              Compartilhe este código com os participantes de sua pesquisa!
+            </Text>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody
+            display='flex'
+            justifyContent='center'
+          >
+            <Text 
+              fontSize='15px' 
+              color='#3F4254'
+              width='100%'
+              border='2px dotted #E4E6EF'
+              padding='4px'
+              textAlign='center'
+            >
+              {shareLink}
+            </Text>
+          </ModalBody>
+
+          <ModalFooter 
+            display='flex'
+            justifyContent='center'
+          >
+            <Button 
+              backgroundColor={'#F5F8FA'}
+              color={'#7E8299'}
+              mr={3}
+            >
+              Voltar
             </Button>
           </ModalFooter>
         </ModalContent>

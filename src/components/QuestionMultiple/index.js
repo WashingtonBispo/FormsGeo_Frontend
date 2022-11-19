@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useToast } from '@chakra-ui/react'
 
 import { 
@@ -24,10 +24,11 @@ import getValidationErrors from '../../utils/getValidationErrors'
 
 import QuestionHeader from '../QuestionHeader';
 
-const Likert = (props) => {
+const QuestionMultiple = (props) => {
   const index = props.index;
   const questionsList = props.questionsList;
   const setQuestionsList = props.setQuestionsList;
+  const title = props.title;
   const alternative = props.alternative;
   const setAlternative = props.setAlternative;
   const invalidAlternative = props.invalidAlternative;
@@ -117,57 +118,39 @@ const Likert = (props) => {
     <>
       <QuestionContainer>
         <QuestionHeader 
-          name={"Likert"}
+          name={title}
           questionsList={questionsList} 
           setQuestionsList={setQuestionsList} 
           index={index} 
         />
 
         <QuestionMultipleContainer>
-          <Text 
-            fontSize='18px' 
-            color="#3F4254" 
-            marginLeft="8px"
-            >
-            Sub-pergunta
-          </Text>
-
           {!!questionsList[index].alternatives &&
-          questionsList[index].alternatives.map((alternative, index) => {
+          questionsList[index].alternatives.map((alternative) => {
             return (
-              <Box>
+              <Box 
+                key={alternative.index}
+                width="100%"
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                margin="6px 0"
+              >
                 <Text 
                   fontSize='18px' 
                   color="#3F4254" 
                   marginLeft="8px"
                   >
-                  {index+1}º marcador
+                  {alternative.value}
                 </Text>
 
-                <Box 
-                  key={alternative.index}
-                  width="100%"
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  margin="6px 0"
-                  >
-                  <Text 
-                    fontSize='18px' 
-                    color="#3F4254" 
-                    marginLeft="8px"
-                    >
-                    {alternative.value}
-                  </Text>
-
-                  <IconButton
-                    onClick={() => {handleDeleteAlternative(alternative.index)}}
-                    marginLeft={'4px'}
-                    aria-label='DeleteAlternative'
-                    icon={<FaTrashAlt />}
-                    variant='outline'
-                    />
-                </Box>
+                <IconButton
+                  onClick={() => {handleDeleteAlternative(alternative.index)}}
+                  marginLeft={'4px'}
+                  aria-label='DeleteAlternative'
+                  icon={<FaTrashAlt />}
+                  variant='outline'
+                />
               </Box>
             );
           })}
@@ -201,4 +184,4 @@ const Likert = (props) => {
   );
 };
 
-export default Likert;
+export default QuestionMultiple;

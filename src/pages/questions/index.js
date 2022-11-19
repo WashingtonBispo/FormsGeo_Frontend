@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import { useDispatch } from "react-redux";
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@chakra-ui/react'
 
 import {
@@ -34,8 +34,7 @@ import { api } from "../../services/api";
 import Header from "../../components/header";
 import CurrentRoute from "../../components/currentRoute";
 import OpenAnswer from "../../components/openAnswer";
-import MultipleQuestion from "../../components/multipleQuestion";
-import SelectionBox from "../../components/selectionBox";
+import QuestionMultiple from "../../components/QuestionMultiple";
 import AncLikert from "../../components/ancLikert";
 import Likert from "../../components/likert";
 
@@ -57,11 +56,14 @@ const Questions = () => {
     "Caixas de seleção"
   ]
 
+  const [questionMultipleAlternative, setQuestionMultipleAlternative] = useState('');
+  const [invalidQuestionMultipleAlternative, setInvalidQuestionMultipleAlternative] = useState(false);
   const [questionsList, setQuestionsList] = useState([]);
   const [pageItens, setPageItens] = useState(5);
   const [showedQuestion, setShowedQuestion] = useState(0);
   const [show, setShow] = useState(false);
 
+  const navigate = useNavigate();
   const toast = useToast();
   const color = useColorModeValue('white', 'gray.700');
   
@@ -123,6 +125,12 @@ const Questions = () => {
     setShowedQuestion(tempQuestionList.length - 1);
   }
 
+  const changeShowedQuestion = (index) => {
+    setQuestionMultipleAlternative('');
+    setInvalidQuestionMultipleAlternative(false);
+    setShowedQuestion(index - 1);
+  }
+
   const getOpenAnswerQuestion = () => {
     return {
       index: questionsList.length+1,
@@ -145,7 +153,7 @@ const Questions = () => {
     return {
       index: questionsList.length+1,
       question: "",
-      alternatives: [],
+      alternatives: ["", "", "1", 0],
       type: 2
     }
   }
@@ -226,14 +234,18 @@ const Questions = () => {
           <OpenAnswer 
             questionsList={questionsList} 
             setQuestionsList={setQuestionsList} 
-            index={showedQuestion} 
+            index={showedQuestion}
           />);
 
       case 1:
         return (<Likert 
             questionsList={questionsList} 
             setQuestionsList={setQuestionsList} 
-            index={showedQuestion} 
+            index={showedQuestion}
+            alternative={questionMultipleAlternative}
+            setAlternative={setQuestionMultipleAlternative}
+            invalidAlternative={invalidQuestionMultipleAlternative}
+            setInvalidAlternative={setInvalidQuestionMultipleAlternative}
           />);
 
       case 2:
@@ -244,22 +256,54 @@ const Questions = () => {
           />);
 
       case 3:
-        return (<MultipleQuestion 
+        return (<QuestionMultiple 
             questionsList={questionsList} 
             setQuestionsList={setQuestionsList} 
             index={showedQuestion} 
+            title={"Múltipla escolha"}
+            alternative={questionMultipleAlternative}
+            setAlternative={setQuestionMultipleAlternative}
+            invalidAlternative={invalidQuestionMultipleAlternative}
+            setInvalidAlternative={setInvalidQuestionMultipleAlternative}
           />);
 
       case 4:
-        return (<SelectionBox 
+        return (<QuestionMultiple 
             questionsList={questionsList} 
             setQuestionsList={setQuestionsList} 
             index={showedQuestion} 
+            title={"Caixa de seleção"}
+            alternative={questionMultipleAlternative}
+            setAlternative={setQuestionMultipleAlternative}
+            invalidAlternative={invalidQuestionMultipleAlternative}
+            setInvalidAlternative={setInvalidQuestionMultipleAlternative}
           />);
       
       default:
         return (<></>);
     }
+  }
+  
+  const handleSubmitQuestion = () => {
+    const postForm = async () => {
+      try{
+        const postData = {
+          questions: questionsList
+        }
+
+        await schema.validate(postData, {
+          abortEarly: false,
+        });
+
+        navigate('/');
+      } catch (err) {
+        showErrorToast("Ocorreu um erro ao fazer o cadastro do formulário de pesquisa.");
+
+        return;
+      }
+    }
+
+    postForm();
   }
 
   return (
@@ -351,7 +395,7 @@ const Questions = () => {
                   margin="6px 0"
                 >
                   <Tag 
-                    onClick={() => setShowedQuestion(question.index - 1)}
+                    onClick={() => {changeShowedQuestion(question.index)}}
                     size={'md'} 
                     key={'md'} 
                     variant='subtle'
@@ -362,7 +406,7 @@ const Questions = () => {
                   </Tag>
 
                   <Text 
-                    onClick={() => setShowedQuestion(question.index - 1)}
+                    onClick={() => {changeShowedQuestion(question.index)}}
                     fontSize='18px' 
                     color="#3F4254" 
                     marginLeft="8px"
@@ -429,7 +473,8 @@ const Questions = () => {
                 Voltar
               </Button>
 
-              <Button 
+              <Button
+                onClick={handleSubmitQuestion}
                 backgroundColor={'#00A3FF'}
                 color={'white'}
                 marginTop={'24px'} 
