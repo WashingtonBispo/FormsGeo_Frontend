@@ -13,6 +13,7 @@ import { compressImage, parsePictureToBase64, parseBase64ToPicture } from '../..
 import * as Yup from 'yup';
 
 import {
+  Icon,
   Box,
   Avatar,
   useColorModeValue,
@@ -57,6 +58,15 @@ import {
 const Forms = () => {
   const token = useSelector((state) => state.authReducer.token);
   const color = useColorModeValue('white', 'gray.700');
+
+  const chakraStyles = {
+    dropdownIndicator: (provided, state) => ({
+      ...provided,
+      background: state.isFocused ? "blue.100" : provided.background,
+      p: 0,
+      w: "40px",
+    }),
+  };
 
   const adminOptions = [
     {
@@ -451,13 +461,15 @@ const Forms = () => {
             return (
               <Box
                 key={research.idForm}
-                maxW={'32%'}
+                maxW={'31%'}
                 w={'full'}
                 bg={color}
                 boxShadow={'2xl'}
-                padding= '2%'
                 borderRadius='12px'
+                marginLeft='1%'
+                marginRight='1%'
                 marginBottom='2%'
+                overflow="hidden"
               >
                 <ResearchContainer>
                   <OptionsContainer>
@@ -473,6 +485,7 @@ const Forms = () => {
                         placeholder='Opções'
                         onChange={(e) => {researchOptionHandle(e, research.idForm)}}
                         options={isAdmin ? adminOptions : userOptions}
+                        chakraStyles={chakraStyles}
                       />
                     </Box>
                   </OptionsContainer>
@@ -530,6 +543,7 @@ const Forms = () => {
                           key={'md'} 
                           variant='subtle' 
                           color={research.status === 1 ? '#62DBA9' : '#F64E60'}
+                          backgroundColor={research.status === 1 ? '#E8FFF3' : '#FFE2E5'}
                           marginLeft='8px'
                           >
                           <TagLabel>{research.status === 1 ? 'Ativo' : 'Finalizado'}</TagLabel>
@@ -591,6 +605,12 @@ const Forms = () => {
                     </Box>
                   </InforContainer>
                 </ResearchContainer>
+
+                <Box 
+                  width="100%"
+                  height="4px"
+                  backgroundColor={research.status === 1 ? '#1DC894' : '#F64E60'}
+                />
               </Box>
             );  
           })}

@@ -16,17 +16,17 @@ export const SearchContainer = styled.div`
 export const ResearchsContainer = styled.div`
   background-color: #F5F5F5;
   max-width: 1400px;
-  width: 96%;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
   flex-wrap: wrap;
 `;
 
 export const ResearchContainer = styled.div`
   display: flex;
   flex-direction: column;
+  padding: 2%;
 `;
 
 export const OptionsContainer = styled.div`
