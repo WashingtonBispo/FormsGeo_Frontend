@@ -77,7 +77,7 @@ const Likert = (props) => {
           const errors = getValidationErrors(err);
 
           console.log(errors)
-          if (errors.value != undefined){
+          if (errors.value !== undefined){
             showErrorToast(errors.value);
             setInvalidAlternative(true);
           }
@@ -131,6 +131,7 @@ const Likert = (props) => {
             color="#3F4254"
             fontWeight="bold" 
             marginLeft="4px"
+            marginBottom="12px"
           >
             Marcadores
           </Text>
@@ -145,7 +146,7 @@ const Likert = (props) => {
                   display="flex"
                   justifyContent="space-between"
                   alignItems="center"
-                  
+                  marginBottom="8px"
                 >
                   <Box
                     display="flex"
@@ -187,6 +188,7 @@ const Likert = (props) => {
           <Box
             width="100%"
             display="flex"
+            marginTop="12px"
           >
             <IconButton
               onClick={handleAddQuestion}

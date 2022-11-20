@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useToast } from '@chakra-ui/react'
 
 import { 
@@ -6,7 +6,9 @@ import {
   Input,
   InputGroup,
   Box,
-  Text
+  Text,
+  Tag,
+  TagLabel
 } from '@chakra-ui/react'
 
 import * as Yup from 'yup';
@@ -76,7 +78,7 @@ const QuestionMultiple = (props) => {
           const errors = getValidationErrors(err);
 
           console.log(errors)
-          if (errors.value != undefined){
+          if (errors.value !== undefined){
             showErrorToast(errors.value);
             setInvalidAlternative(true);
           }
@@ -125,8 +127,18 @@ const QuestionMultiple = (props) => {
         />
 
         <QuestionMultipleContainer>
+          <Text 
+            fontSize='18px' 
+            color="#3F4254"
+            fontWeight="bold" 
+            marginLeft="4px"
+            marginBottom="12px"
+          >
+            Alternativas
+          </Text>
+
           {!!questionsList[index].alternatives &&
-          questionsList[index].alternatives.map((alternative) => {
+          questionsList[index].alternatives.map((alternative, index) => {
             return (
               <Box 
                 key={alternative.index}
@@ -134,15 +146,31 @@ const QuestionMultiple = (props) => {
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
-                margin="6px 0"
+                marginBottom="8px"
               >
-                <Text 
-                  fontSize='18px' 
-                  color="#3F4254" 
-                  marginLeft="8px"
-                  >
-                  {alternative.value}
-                </Text>
+                <Box
+                    display="flex"
+                >
+                  <Tag 
+                    cursor="pointer"
+                    size={'md'} 
+                    key={'md'} 
+                    variant='subtle'
+                    backgroundColor={'#F1FAFF'}
+                    color={'#00A3FF'}
+                    marginLeft="6px"
+                    >
+                    <TagLabel>{index + 1}</TagLabel>
+                  </Tag>
+                  
+                  <Text 
+                    fontSize='18px' 
+                    color="#3F4254" 
+                    marginLeft="8px"
+                    >
+                    {alternative.value}
+                  </Text>
+                </Box>
 
                 <IconButton
                   onClick={() => {handleDeleteAlternative(alternative.index)}}
@@ -150,6 +178,7 @@ const QuestionMultiple = (props) => {
                   aria-label='DeleteAlternative'
                   icon={<FaTrashAlt />}
                   variant='outline'
+                  color="#F1416C"
                 />
               </Box>
             );
@@ -158,6 +187,7 @@ const QuestionMultiple = (props) => {
           <Box
             width="100%"
             display="flex"
+            marginTop="12px"
           >
             <IconButton
               onClick={handleAddQuestion}

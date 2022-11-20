@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useToast } from '@chakra-ui/react'
+import { useToast, useDisclosure } from '@chakra-ui/react'
 
 import {
   Box,
@@ -18,10 +18,15 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  IconButton
+  IconButton,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton
 } from '@chakra-ui/react';
-
-import * as Yup from 'yup';
 
 import { AiFillFileAdd } from 'react-icons/ai'
 import { FaTrashAlt  } from 'react-icons/fa'
@@ -59,26 +64,43 @@ const Questions = () => {
   const [questionsList, setQuestionsList] = useState([]);
   const [pageItens, setPageItens] = useState(5);
   const [showedQuestion, setShowedQuestion] = useState(0);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const { state } = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
   const color = useColorModeValue('white', 'gray.700');
 
+  const showErrorToast = useCallback((message) => {
+    toast({
+      title: message,
+      position: "top-right",
+      status: "error",
+      isClosable: true,
+    });
+  }, [toast]);
+
   const updateFormQuestions = useCallback(() => {
-    const questionsJSON = JSON.stringify(questionsList);
-
-    const updateForm = async () => {
-      const putData = {
-        formId: state.formId,
-        questions: questionsJSON
-      }
-
-      await api.put('Form', putData);
-    };
-
-    updateForm();
-  }, [questionsList, state]);
+    try
+    {
+      const questionsJSON = JSON.stringify(questionsList);
+      
+      const updateForm = async () => {
+        const putData = {
+          formId: state.formId,
+          questions: questionsJSON
+        }
+        
+        await api.put('Form', putData);
+      };
+    
+      updateForm();
+    } 
+    catch
+    {
+      showErrorToast("Não foi possível atualizar o formulário!");
+    }
+  }, [questionsList, state, showErrorToast]);
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -94,21 +116,6 @@ const Questions = () => {
       if (questions.length > 0) setQuestionsList(questions);
     }
   }, [state]);
-
-  const schema = Yup.object().shape({
-    name: Yup.string()
-      .required('Nome obrigatório')
-      .min(4, 'Nome de no minimo 8 caracteres')
-  });
-
-  const showErrorToast = (message) => {
-    toast({
-      title: message,
-      position: "top-right",
-      status: "error",
-      isClosable: true,
-    });
-  }
 
   const addQuestion = (type) => {
     let tempQuestionList = questionsList.map(q => q);
@@ -309,28 +316,6 @@ const Questions = () => {
         return (<></>);
     }
   }
-  
-  const handleSubmitQuestion = () => {
-    const postForm = async () => {
-      try{
-        const postData = {
-          questions: questionsList
-        }
-
-        await schema.validate(postData, {
-          abortEarly: false,
-        });
-
-        navigate('/');
-      } catch (err) {
-        showErrorToast("Ocorreu um erro ao fazer o cadastro do formulário de pesquisa.");
-
-        return;
-      }
-    }
-
-    postForm();
-  }
 
   return (
     <>
@@ -525,7 +510,7 @@ const Questions = () => {
               </Button>
 
               <Button
-                onClick={handleSubmitQuestion}
+                onClick={onOpen}
                 backgroundColor={'#00A3FF'}
                 color={'white'}
                 marginTop={'24px'} 
@@ -537,6 +522,64 @@ const Questions = () => {
           </AddQuestionContainer>
         </Box>
       </BodyContainer>
+
+      <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody
+            display='flex'
+            justifyContent='center'
+          >
+            <Text 
+              fontSize='15px' 
+              color='#3F4254'
+              width='100%'
+              border='2px dotted #E4E6EF'
+              padding='4px'
+              textAlign='center'
+            >
+              Deseja seguir para as funcionalidades de geolocalização ou salvar o formulário?
+            </Text>
+          </ModalBody>
+
+          <ModalFooter 
+            display='flex'
+            justifyContent='center'
+          >
+            <Button 
+              backgroundColor={'#F5F8FA'}
+              color={'#7E8299'}
+              mr={3}
+            >
+              Voltar
+            </Button>
+
+            <Button
+              onClick={() => {
+                updateFormQuestions();
+                navigate("/");
+              }}
+              backgroundColor={'#00A3FF'}
+              color={'white'}
+              mr={3}
+            >
+              Salvar
+            </Button>
+
+            <Button
+              onClick={() => {}}
+              backgroundColor={'#00A3FF'}
+              color={'white'}
+              mr={3}
+            >
+              Próximo
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

@@ -48,13 +48,17 @@ const AncLikert = (props) => {
         <QuestionMultipleContainer>
           <Text 
             fontSize='18px' 
-            color="#3F4254" 
-            marginLeft="8px"
-            >
-            Sub-pergunta
+            color="#3F4254"
+            fontWeight="bold" 
+            marginLeft="4px"
+            marginBottom="12px"
+          >
+            Marcadores
           </Text>
 
-          <Box>
+          <Box
+            marginBottom="8px"
+          >
             <Text 
               fontSize='18px' 
               color="#3F4254" 
@@ -74,7 +78,9 @@ const AncLikert = (props) => {
             </InputGroup>
           </Box>
 
-          <Box>
+          <Box
+            marginBottom="12px"
+          >
             <Text 
               fontSize='18px' 
               color="#3F4254" 
@@ -97,6 +103,7 @@ const AncLikert = (props) => {
           <RadioGroup 
             onChange={e => handleAncQuestion(e, 2)} 
             value={questionsList[index].alternatives[2]}
+            marginBottom="12px"
           >
             <Stack direction='row'>
               <Radio value='1'>Slider</Radio>
@@ -105,18 +112,27 @@ const AncLikert = (props) => {
           </RadioGroup>
 
           {questionsList[index].alternatives[2] === "2" ? (
-            <NumberInput 
-              onChange={e => handleAncQuestion(e, 3)}
-              value={questionsList[index].alternatives[3]} 
-              min={2}
-              clampValueOnBlur={false}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
+            <Box>
+              <Text 
+                fontSize='18px' 
+                color="#3F4254" 
+                marginLeft="8px"
+                >
+                Quantidade de marcadores
+              </Text>
+              <NumberInput 
+                onChange={e => handleAncQuestion(e, 3)}
+                value={questionsList[index].alternatives[3]} 
+                min={2}
+                clampValueOnBlur={false}
+                >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </Box>
           ) : (
             <></>
           )}
