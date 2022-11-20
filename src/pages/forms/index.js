@@ -67,6 +67,39 @@ const Forms = () => {
     }),
   };
 
+  const statusOptions = [
+    {
+      status: "Ativo",
+      color: "#62DBA9",
+      backgroundColor: "#E8FFF3",
+      bottom: "#1DC894"
+    },
+    {
+      status: "Arquivado",
+      color: "#A9A9A9",
+      backgroundColor: "#F5F5F5",
+      bottom: "#A9A9A9"
+    },
+    {
+      status: "Finalizado",
+      color: "#F64E60",
+      backgroundColor: "#FFE2E5",
+      bottom: "#F64E60"
+    },
+    {
+      status: "Preview",
+      color: "#00A3FF",
+      backgroundColor: "#F1FAFF",
+      bottom: "#00A3FF"
+    },
+    {
+      status: "Pré-teste",
+      color: "#FFA800",
+      backgroundColor: "#FFF4DE",
+      bottom: "#FFA800"
+    }
+  ];
+
   const adminOptions = [
     {
       label: 'Ativar',
@@ -212,6 +245,7 @@ const Forms = () => {
   }
 
   const handleClearModal = () => {
+    onCloseResearch();
     setHasImg(false);
     setIcon(null);
     setName('');
@@ -550,11 +584,11 @@ const Forms = () => {
                           size={'md'} 
                           key={'md'} 
                           variant='subtle' 
-                          color={research.status === 1 ? '#62DBA9' : '#F64E60'}
-                          backgroundColor={research.status === 1 ? '#E8FFF3' : '#FFE2E5'}
+                          color={statusOptions[research.status-1].color}
+                          backgroundColor={statusOptions[research.status-1].backgroundColor}
                           marginLeft='8px'
                           >
-                          <TagLabel>{research.status === 1 ? 'Ativo' : 'Finalizado'}</TagLabel>
+                          <TagLabel>{statusOptions[research.status-1].status}</TagLabel>
                         </Tag>
                     </Text>
                   </AboutContainer>
@@ -617,7 +651,7 @@ const Forms = () => {
                 <Box 
                   width="100%"
                   height="4px"
-                  backgroundColor={research.status === 1 ? '#1DC894' : '#F64E60'}
+                  backgroundColor={statusOptions[research.status-1].bottom}
                 />
               </Box>
             );  
@@ -655,7 +689,7 @@ const Forms = () => {
                     }}
                   />
 
-                  <MdOutlineAddCircle />
+                  <MdOutlineAddCircle color="#20D489" />
                   
                   {!hasImg ? (
                     <Text
