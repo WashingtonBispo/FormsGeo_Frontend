@@ -9,11 +9,10 @@ export const BodyContainer = styled.div`
 
 export const QuestionsListContainer = styled.div`
   width: 100%;
-  margin: 2% auto;
   padding: 12px 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   border: 1px dotted #E4E6EF;
   border-radius: 8px;
@@ -38,6 +37,4 @@ export const AddQuestionButtonContainer = styled.div`
 `;
 
 export const ButtonIconContainer = styled.div`
-  width: 170px;
-  margin: 0 auto;
 `;

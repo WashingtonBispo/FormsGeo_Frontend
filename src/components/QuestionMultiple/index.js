@@ -165,6 +165,7 @@ const QuestionMultiple = (props) => {
               aria-label='AddAlternative'
               icon={<MdAddBox />}
               variant='outline'
+              color="#20D489"
               />
 
             <InputGroup size='md'>

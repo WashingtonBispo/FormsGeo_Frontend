@@ -6,7 +6,9 @@ import {
   Input,
   InputGroup,
   Box,
-  Text
+  Text,
+  Tag,
+  TagLabel
 } from '@chakra-ui/react'
 
 import * as Yup from 'yup';
@@ -126,39 +128,48 @@ const Likert = (props) => {
         <QuestionMultipleContainer>
           <Text 
             fontSize='18px' 
-            color="#3F4254" 
-            marginLeft="8px"
-            >
-            Sub-pergunta
+            color="#3F4254"
+            fontWeight="bold" 
+            marginLeft="4px"
+          >
+            Marcadores
           </Text>
 
           {!!questionsList[index].alternatives &&
           questionsList[index].alternatives.map((alternative, index) => {
             return (
               <Box>
-                <Text 
-                  fontSize='18px' 
-                  color="#3F4254" 
-                  marginLeft="8px"
-                  >
-                  {index+1}º marcador
-                </Text>
-
                 <Box 
                   key={alternative.index}
                   width="100%"
                   display="flex"
                   justifyContent="space-between"
                   alignItems="center"
-                  margin="6px 0"
+                  
+                >
+                  <Box
+                    display="flex"
                   >
-                  <Text 
-                    fontSize='18px' 
-                    color="#3F4254" 
-                    marginLeft="8px"
-                    >
-                    {alternative.value}
-                  </Text>
+                    <Tag 
+                      cursor="pointer"
+                      size={'md'} 
+                      key={'md'} 
+                      variant='subtle'
+                      backgroundColor={'#F1FAFF'}
+                      color={'#00A3FF'}
+                      marginLeft="6px"
+                      >
+                      <TagLabel>{index + 1}</TagLabel>
+                    </Tag>
+
+                    <Text 
+                      fontSize='18px' 
+                      color="#3F4254" 
+                      marginLeft="8px"
+                      >
+                      {alternative.value}
+                    </Text>
+                  </Box>  
 
                   <IconButton
                     onClick={() => {handleDeleteAlternative(alternative.index)}}
@@ -166,6 +177,7 @@ const Likert = (props) => {
                     aria-label='DeleteAlternative'
                     icon={<FaTrashAlt />}
                     variant='outline'
+                    color="#F1416C"
                     />
                 </Box>
               </Box>
@@ -182,6 +194,7 @@ const Likert = (props) => {
               aria-label='AddAlternative'
               icon={<MdAddBox />}
               variant='outline'
+              color="#20D489"
               />
 
             <InputGroup size='md'>

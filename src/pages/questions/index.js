@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react";
-import { useNavigate } from 'react-router-dom';
+import React, {useCallback, useEffect, useState} from "react";
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@chakra-ui/react'
 
 import {
@@ -27,16 +27,14 @@ import { AiFillFileAdd } from 'react-icons/ai'
 import { FaTrashAlt  } from 'react-icons/fa'
 import { BsFillArrowDownSquareFill, BsFillArrowUpSquareFill } from 'react-icons/bs'
 
-import authAction from "../../store/action/auth";
-import getValidationErrors from '../../utils/getValidationErrors'
-import { api } from "../../services/api";
-
 import Header from "../../components/header";
 import CurrentRoute from "../../components/currentRoute";
 import OpenAnswer from "../../components/openAnswer";
 import QuestionMultiple from "../../components/QuestionMultiple";
 import AncLikert from "../../components/ancLikert";
 import Likert from "../../components/likert";
+
+import { api } from '../../services/api';
 
 import {
   BodyContainer,
@@ -61,23 +59,47 @@ const Questions = () => {
   const [questionsList, setQuestionsList] = useState([]);
   const [pageItens, setPageItens] = useState(5);
   const [showedQuestion, setShowedQuestion] = useState(0);
-  const [show, setShow] = useState(false);
 
+  const { state } = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
   const color = useColorModeValue('white', 'gray.700');
+
+  const updateFormQuestions = useCallback(() => {
+    const questionsJSON = JSON.stringify(questionsList);
+
+    const updateForm = async () => {
+      const putData = {
+        formId: state.formId,
+        questions: questionsJSON
+      }
+
+      await api.put('Form', putData);
+    };
+
+    updateForm();
+  }, [questionsList, state]);
   
   useEffect(() => {
-    
-  }, []);
+    const interval = setInterval(() => {
+      updateFormQuestions();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [updateFormQuestions]);
+
+  useEffect(() => {
+    console.log(state.questions)
+    if (state.isEdit){
+      const questions = JSON.parse(state.questions);
+      setQuestionsList(questions);
+    }
+  }, [state]);
 
   const schema = Yup.object().shape({
     name: Yup.string()
       .required('Nome obrigatório')
       .min(4, 'Nome de no minimo 8 caracteres')
   });
-  
-  const handleClick = () => setShow(!show);
 
   const showErrorToast = (message) => {
     toast({
@@ -322,6 +344,14 @@ const Questions = () => {
           borderRadius="12px"
           margin="0 auto"
         >
+          <Text 
+            fontSize='18px' 
+            color="#3F4254" 
+            marginLeft="8px"
+            >
+            Digite a quantidade de questões em uma página do dispositivo móvel:
+          </Text>
+
           <NumberInput 
             onChange={e => setPageItens(e)}
             defaultValue={pageItens} 
@@ -339,15 +369,24 @@ const Questions = () => {
           <Box
             margin="12px 0"
             display="flex"
+            alignItems="center"
             justifyContent="right"
           >
+            <Text 
+              fontSize='18px' 
+              color="#3F4254" 
+              marginRight="8px"
+              >
+              Clique para cadastrar uma questão
+            </Text>
+          
             <Menu>
               <MenuButton
-                
                 as={IconButton}
                 aria-label='AddQuestion'
                 icon={<AiFillFileAdd />}
                 variant='outline'
+                color={"#50CD89"}
                 />
               <MenuList>
                 <MenuItem
@@ -390,12 +429,13 @@ const Questions = () => {
                   key={question.index}
                   width="100%"
                   display="flex"
-                  justifyContent="center"
+                  justifyContent="space-between"
                   alignItems="center"
-                  margin="6px 0"
+                  padding="6px 4%"
                 >
                   <Tag 
                     onClick={() => {changeShowedQuestion(question.index)}}
+                    cursor="pointer"
                     size={'md'} 
                     key={'md'} 
                     variant='subtle'
@@ -407,9 +447,12 @@ const Questions = () => {
 
                   <Text 
                     onClick={() => {changeShowedQuestion(question.index)}}
+                    cursor="pointer"
                     fontSize='18px' 
                     color="#3F4254" 
                     marginLeft="8px"
+                    maxWidth="200px"
+                    textAlign="center"
                     >
                     {questionTypes[question.type]}
                   </Text>
@@ -421,6 +464,7 @@ const Questions = () => {
                       aria-label='UpQuestion'
                       icon={<BsFillArrowUpSquareFill />}
                       variant='outline'
+                      color="#00A3FF" 
                     />
                     
                     <IconButton
@@ -429,6 +473,7 @@ const Questions = () => {
                       aria-label='DownQuestion'
                       icon={<BsFillArrowDownSquareFill />}
                       variant='outline'
+                      color="#00A3FF"
                     />
                     
                     <IconButton
@@ -437,6 +482,7 @@ const Questions = () => {
                       aria-label='DeleteQuestion'
                       icon={<FaTrashAlt />}
                       variant='outline'
+                      color="#F1416C"
                     />
                   </ButtonIconContainer>
                 </Box>
@@ -456,7 +502,7 @@ const Questions = () => {
         >
           <AddQuestionContainer>
             <AddQuestionBody>
-              {questionsList.length == 0 ? (
+              {questionsList.length === 0 ? (
                 <></>
               ) : (
                 renderQuestion()
@@ -469,6 +515,7 @@ const Questions = () => {
                 color={'#7E8299'}
                 marginTop={'24px'} 
                 size='md'
+                onClick={() => navigate('/')}
               >
                 Voltar
               </Button>

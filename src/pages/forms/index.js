@@ -13,7 +13,6 @@ import { compressImage, parsePictureToBase64, parseBase64ToPicture } from '../..
 import * as Yup from 'yup';
 
 import {
-  Icon,
   Box,
   Avatar,
   useColorModeValue,
@@ -163,14 +162,14 @@ const Forms = () => {
     {
       showErrorToast('Ocorreu um erro ao listar os usuários.');
     }
-  }, [showErrorToast])
+  }, [showErrorToast, isAdmin])
 
   useEffect(() => {
     const decoded = jwt_decode(token);
     
     setEmail(decoded.email);
     
-    if(decoded.role == "Admin"){
+    if(decoded.role === "Admin"){
       setIsAdmin(true);
       getResearchs();
     }
@@ -188,7 +187,7 @@ const Forms = () => {
     }else{
       isAdmin ? getResearchs(null) : getResearchs(email);
     }
-  }, [getResearchs]);
+  }, [getResearchs, email, isAdmin]);
 
   const schema = Yup.object().shape({
     name: Yup.string()
@@ -266,12 +265,8 @@ const Forms = () => {
 
   const deleteResearch = (id) => {
     const HandleResearch = async (id) => {
-      try{
-        const researchData = {
-          formId: id
-        };
-        
-        await api.delete('Form/', researchData);
+      try{ 
+        await api.delete('Form/' + id);
         setCount(count + 1);
       }
       catch (err){
@@ -334,14 +329,19 @@ const Forms = () => {
           abortEarly: false,
         });
 
-        await api.post('Form', postData);
+        const formResponse = await api.post('Form', postData);
 
-        navigate('/questoes');
+        navigate('/questoes', {
+          state: {
+            isEdit: false,
+            formId: formResponse.data.formId
+          }
+        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
 
-          if (errors.name != undefined){
+          if (errors.name !== undefined){
             showErrorToast(errors.name);
             setInvalidName(true);
           }
@@ -389,12 +389,19 @@ const Forms = () => {
 
         await api.put('Form', putData);
 
-        navigate('/questoes');
+        const researchQuestions = researchs.find(r => r.idForm === researchId).questions;
+        navigate('/questoes', {
+          state: {
+            isEdit: true,
+            formId: researchId,
+            questions: researchQuestions
+          }
+        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
 
-          if (errors.name != undefined){
+          if (errors.name !== undefined){
             showErrorToast(errors.name);
             setInvalidName(true);
           }

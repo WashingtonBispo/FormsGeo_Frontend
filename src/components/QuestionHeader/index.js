@@ -33,7 +33,7 @@ const OpenAnswer = (props) => {
 
         <Textarea
           border="1px solid #E4E6EF !important"
-          defaultValue={ !questionsList[index] ? "" : questionsList[index].question }
+          value={ questionsList[index].question }
           onChange={e => {handleQuestionInput(e.target.value)}} 
           placeholder='Pergunta'
         />
