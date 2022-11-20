@@ -88,10 +88,10 @@ const Questions = () => {
   }, [updateFormQuestions]);
 
   useEffect(() => {
-    console.log(state.questions)
     if (state.isEdit){
       const questions = JSON.parse(state.questions);
-      setQuestionsList(questions);
+      
+      if (questions.length > 0) setQuestionsList(questions);
     }
   }, [state]);
 
@@ -199,37 +199,41 @@ const Questions = () => {
   }
 
   const swapUpQuestion = (i) => {
-    i--;
+    if (i > 1){
+      i--;
 
-    let tempQuestionList = questionsList.map(q => q);
+      let tempQuestionList = questionsList.map(q => q);
 
-    // swap index
-    tempQuestionList[i].index--;
-    tempQuestionList[i - 1].index++;
+      // swap index
+      tempQuestionList[i].index--;
+      tempQuestionList[i - 1].index++;
 
-    // swap question
-    var tempQuestion = tempQuestionList[i];
-    tempQuestionList[i] = tempQuestionList[i - 1];
-    tempQuestionList[i - 1] = tempQuestion;
+      // swap question
+      var tempQuestion = tempQuestionList[i];
+      tempQuestionList[i] = tempQuestionList[i - 1];
+      tempQuestionList[i - 1] = tempQuestion;
 
-    setQuestionsList(tempQuestionList);
+      setQuestionsList(tempQuestionList);
+    }
   }
 
   const swapDownQuestion = (i) => {
-    i--;
-
-    let tempQuestionList = questionsList.map(q => q);
-
-    // swap index
-    tempQuestionList[i].index++;
-    tempQuestionList[i + 1].index--;
-
-    // swap question
-    var tempQuestion = tempQuestionList[i];
-    tempQuestionList[i] = tempQuestionList[i + 1];
-    tempQuestionList[i + 1] = tempQuestion;
-
-    setQuestionsList(tempQuestionList);
+    if (i < questionsList.length){
+      i--;
+      
+      let tempQuestionList = questionsList.map(q => q);
+      
+      // swap index
+      tempQuestionList[i].index++;
+      tempQuestionList[i + 1].index--;
+      
+      // swap question
+      var tempQuestion = tempQuestionList[i];
+      tempQuestionList[i] = tempQuestionList[i + 1];
+      tempQuestionList[i + 1] = tempQuestion;
+      
+      setQuestionsList(tempQuestionList);
+    }
   }
 
   const deleteQuestion = (i) => {
@@ -345,11 +349,11 @@ const Questions = () => {
           margin="0 auto"
         >
           <Text 
-            fontSize='18px' 
+            fontSize='16px' 
             color="#3F4254" 
             marginLeft="8px"
             >
-            Digite a quantidade de questões em uma página do dispositivo móvel:
+            Digite a quantidade de questões presentes em uma página do dispositivo móvel:
           </Text>
 
           <NumberInput 
@@ -377,7 +381,7 @@ const Questions = () => {
               color="#3F4254" 
               marginRight="8px"
               >
-              Clique para cadastrar uma questão
+              Cadastrar questão:
             </Text>
           
             <Menu>

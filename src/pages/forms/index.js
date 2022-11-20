@@ -659,7 +659,13 @@ const Forms = () => {
         </ResearchsContainer>
       </BodyContainer>
 
-      <Modal blockScrollOnMount={false} isOpen={isOpenResearch} onClose={onCloseResearch}>
+      <Modal 
+        blockScrollOnMount={false} 
+        isOpen={isOpenResearch} 
+        onClose={onCloseResearch}
+        scrollBehavior={'inside'}
+        size={'4xl'}
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader></ModalHeader>
@@ -716,7 +722,7 @@ const Forms = () => {
                   onChange={handleChangeName}
                   pr='4.5rem'
                   type='text'
-                  marginBottom='8px'
+                  marginBottom='16px'
                   />
 
                 <Input
@@ -725,11 +731,11 @@ const Forms = () => {
                   onChange={handleChangeLinkTerm}
                   pr='4.5rem'
                   type='text'
-                  marginBottom='8px'
+                  marginBottom='16px'
                   />
 
                 <Box
-                  marginBottom='8px'
+                  marginBottom='16px'
                 >
                   <CKEditor
                     editor={ ClassicEditor }

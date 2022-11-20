@@ -55,6 +55,12 @@ export const AddResearchContainer = styled.div`
     margin-bottom: 8px;
     display: flex;
     flex-direction: row;
-    align-items: center
+    align-items: center;
+    margin-bottom: 16px;
+    border: 1px dotted #E4E6EF;
+    width: 100%;
+    border-radius: 8px;
+    padding: 6px;
+    background-color: #f5f5f5;
   }
 `;
