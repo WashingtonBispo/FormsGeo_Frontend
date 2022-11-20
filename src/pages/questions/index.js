@@ -83,7 +83,7 @@ const Questions = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       updateFormQuestions();
-    }, 3000);
+    }, 30000);
     return () => clearInterval(interval);
   }, [updateFormQuestions]);
 

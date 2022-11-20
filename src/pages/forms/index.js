@@ -322,6 +322,7 @@ const Forms = () => {
           finalMessage,
           gatherEnd: false,
           gatherPassage: false,
+          status: 1,
           icon: base64Image.replace('data:image/png;base64,', '')
         }
 
