@@ -298,9 +298,10 @@ const Forms = () => {
   }
 
   const deleteResearch = (id) => {
+    console.log(id)
     const HandleResearch = async (id) => {
       try{ 
-        await api.delete('Form/' + id);
+        await api.delete('Form/', { params: { formId: id } });
         setCount(count + 1);
       }
       catch (err){
