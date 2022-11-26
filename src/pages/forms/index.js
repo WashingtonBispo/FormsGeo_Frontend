@@ -274,6 +274,7 @@ const Forms = () => {
   }
 
   const deleteResearch = (id) => {
+    console.log(id)
     const HandleResearch = async (id) => {
       try{ 
         await api.delete('Form?formId=' + id);
