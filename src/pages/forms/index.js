@@ -31,13 +31,26 @@ import {
   Input
 } from '@chakra-ui/react';
 
-import {
-  Select,
-} from 'chakra-react-select';
+import Select from 'react-select'
 
 import { MdOutlineAddCircle } from 'react-icons/md';
+import { AiFillFolder, AiFillFolderOpen } from 'react-icons/ai';
 
 import getValidationErrors from '../../utils/getValidationErrors';
+
+import { 
+  adminOptionsPreview, 
+  userOptionsPreview,
+  adminOptionsPreTeste, 
+  userOptionsPreTeste, 
+  adminOptionsActive, 
+  userOptionsActive, 
+  adminOptionsFinal, 
+  userOptionsFinal, 
+  filedOptions,
+  statusOptions
+} from '../../utils/form';
+
 import { api } from '../../services/api';
 
 import Header from '../../components/header';
@@ -57,90 +70,6 @@ import {
 const Forms = () => {
   const token = useSelector((state) => state.authReducer.token);
   const color = useColorModeValue('white', 'gray.700');
-
-  const chakraStyles = {
-    dropdownIndicator: (provided, state) => ({
-      ...provided,
-      background: state.isFocused ? "blue.100" : provided.background,
-      p: 0,
-      w: "40px",
-    }),
-  };
-
-  const statusOptions = [
-    {
-      status: "Ativo",
-      color: "#62DBA9",
-      backgroundColor: "#E8FFF3",
-      bottom: "#1DC894"
-    },
-    {
-      status: "Arquivado",
-      color: "#A9A9A9",
-      backgroundColor: "#F5F5F5",
-      bottom: "#A9A9A9"
-    },
-    {
-      status: "Finalizado",
-      color: "#F64E60",
-      backgroundColor: "#FFE2E5",
-      bottom: "#F64E60"
-    },
-    {
-      status: "Preview",
-      color: "#00A3FF",
-      backgroundColor: "#F1FAFF",
-      bottom: "#00A3FF"
-    },
-    {
-      status: "Pré-teste",
-      color: "#FFA800",
-      backgroundColor: "#FFF4DE",
-      bottom: "#FFA800"
-    }
-  ];
-
-  const adminOptions = [
-    {
-      label: 'Ativar',
-      value: 'Ativar',
-    },
-    {
-      label: 'Editar',
-      value: 'Editar',
-    },
-    {
-      label: 'Compartilhar',
-      value: 'Compartilhar'
-    },
-    {
-      label: 'Finalizar',
-      value: 'Finalizar'
-    },
-    {
-      label: 'Deletar',
-      value: 'Deletar'
-    }
-  ]
-
-  const userOptions = [
-    {
-      label: 'Ativar',
-      value: 'Ativar',
-    },
-    {
-      label: 'Editar',
-      value: 'Editar',
-    },
-    {
-      label: 'Compartilhar',
-      value: 'Compartilhar'
-    },
-    {
-      label: 'Finalizar',
-      value: 'Finalizar'
-    }
-  ]
   
   const [isAdmin, setIsAdmin] = useState(false);
   const [researchId, setResearchId] = useState(null);
@@ -157,6 +86,7 @@ const Forms = () => {
   const [hasImg, setHasImg] = useState(false);
   const [shareLink, setShareLink] = useState('');
   const [isEdit, setIsEdit] = useState(false);
+  const [filed, setFiled] = useState(false);
 
   const { isOpen: isOpenResearch, onOpen: onOpenResearch, onClose: onCloseResearch } = useDisclosure();
   const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
@@ -179,9 +109,9 @@ const Forms = () => {
       let response = null;
 
       if (isAdmin)
-        response = await api.get('Form/List', { params: { email: email, filter: filter } });
+        response = await api.get('Form/List', { params: { email: email, filter: filter, filed: filed } });
       else
-        response = await api.get('Form/List', { params: { filter: filter } });
+        response = await api.get('Form/List', { params: { filter: filter, filed: filed } });
 
       let responseData = response.data;
 
@@ -195,7 +125,7 @@ const Forms = () => {
     {
       showErrorToast('Ocorreu um erro ao listar os usuários.');
     }
-  }, [showErrorToast, isAdmin])
+  }, [showErrorToast, isAdmin, filed])
 
   useEffect(() => {
     const decoded = jwt_decode(token);
@@ -206,8 +136,11 @@ const Forms = () => {
       setIsAdmin(true);
       getResearchs();
     }
+    else 
+    {
+      getResearchs(decoded.email);
+    }
 
-    getResearchs(decoded.email);
   }, [getResearchs, count, token]);
 
   const handleChangeSearchInfor = useCallback((event) => {
@@ -272,12 +205,55 @@ const Forms = () => {
         changeStatusResearch(id, 3);
         break;
       case 'Deletar':
-        deleteResearch(id);
+        if (!isAdmin)
+          softDeleteResearch(id);
+        else
+          deleteResearch(id);
+        break;
+      case 'Duplicar':
+        copyResearch(id);
+        break;
+      case 'Arquivar':
+        changeStatusResearch(id, 2);
+        break;
+      case 'PreTeste':
+        changeStatusResearch(id, 5);
         break;
       default:
         return;
     }
   };
+
+  const softDeleteResearch = (id) => {
+    const HandleResearch = async (id) => {
+      try{ 
+        await api.delete('Form?formId=' + id);
+        setCount(count + 1);
+      }
+      catch (err){
+        showErrorToast('Ocorreu um erro ao remover a pesquisa.');
+      }
+    }
+    
+    HandleResearch(id);
+  }
+
+  const copyResearch = (id) => {
+    const HandleResearch = async (id) => {
+      try{
+        const researchData = {
+          formId: id
+        };
+        
+        await api.post('Form/Duplicate'  , researchData);
+        setCount(count + 1);
+      }
+      catch (err){
+        showErrorToast('Ocorreu um erro ao duplicar a pesquisa.');
+      }
+    }
+    HandleResearch(id);
+  }
 
   const changeStatusResearch = (id, status) => {
     const HandleResearch = async (id, status) => {
@@ -291,7 +267,7 @@ const Forms = () => {
         setCount(count + 1);
       }
       catch (err){
-        showErrorToast('Ocorreu um erro ao remover um usuário.');
+        showErrorToast('Ocorreu um erro ao atualizar a pesquisa.');
       }
     }
     HandleResearch(id, status);
@@ -300,11 +276,11 @@ const Forms = () => {
   const deleteResearch = (id) => {
     const HandleResearch = async (id) => {
       try{ 
-        await api.delete('Form/' + id);
+        await api.delete('Form?formId=' + id);
         setCount(count + 1);
       }
       catch (err){
-        showErrorToast('Ocorreu um erro ao remover um usuário.');
+        showErrorToast('Ocorreu um erro ao remover a pesquisa.');
       }
     }
     
@@ -455,6 +431,54 @@ const Forms = () => {
     editForm();
   }
 
+  const handleFormOptions = (research) => {
+    let option = filedOptions;
+
+    if (filed){
+      option = filedOptions;
+    }
+    else{
+      switch(research.status){
+        case 1:
+          option = isAdmin ? adminOptionsActive : userOptionsActive;
+          break;
+        case 2:
+          option = filedOptions;
+          break;
+        case 3:
+          option = isAdmin ? adminOptionsFinal : userOptionsFinal;
+          break;
+        case 4:
+          option = isAdmin ? adminOptionsPreview : userOptionsPreview;
+          break;
+        case 5:
+          option = isAdmin ? adminOptionsPreTeste : userOptionsPreTeste;
+          break;
+        default:
+          option = filedOptions;
+      }
+    }
+
+    const theme = (theme) => ({
+      ...theme,
+      spacing: {
+        ...theme.spacing,
+        controlHeight: 35,
+        baseUnit: 2
+      }
+    });
+
+    return (
+      <Select
+        className='basic-single'
+        placeholder='Opções'
+        onChange={(e) => {researchOptionHandle(e, research.idForm)}}
+        options={option}
+        theme={theme}
+      />
+    );    
+  }
+
   return (
     <>
       <Header />
@@ -483,18 +507,43 @@ const Forms = () => {
       </Box>
 
       <SearchContainer>
-        <InputGroup size='md'>
+        <InputGroup 
+          width="40%"
+        >
           <Input
             value={searchInfor}
             onChange={handleChangeSearchInfor}
             placeholder='Buscar pesquisas'
             backgroundColor='#DDDDDD'
-            maxWidth='800px'
-            margin='0 auto'
             pr='4.5rem'
             type='text'
             />
         </InputGroup>
+
+        {filed ? (
+          <Button 
+            backgroundColor={'#DDDDDD'}
+            color={'black'}
+            mr={3}
+            marginLeft="20px"
+            leftIcon={<AiFillFolderOpen />}
+            onClick={() => {setFiled(false)}}
+          >
+            Pesquisas
+          </Button>
+        ) : (
+          <Button 
+            backgroundColor={'#DDDDDD'}
+            color={'black'}
+            mr={3}
+            marginLeft="20px"
+            leftIcon={<AiFillFolder />}
+            onClick={() => {setFiled(true)}}
+          >
+            Arquivados
+          </Button>
+        )}
+        
       </SearchContainer>
 
       <BodyContainer>
@@ -522,13 +571,7 @@ const Forms = () => {
                       />
 
                     <Box width='160px'>
-                      <Select
-                        className='basic-single'
-                        placeholder='Opções'
-                        onChange={(e) => {researchOptionHandle(e, research.idForm)}}
-                        options={isAdmin ? adminOptions : userOptions}
-                        chakraStyles={chakraStyles}
-                      />
+                      {handleFormOptions(research)}
                     </Box>
                   </OptionsContainer>
 
@@ -567,7 +610,7 @@ const Forms = () => {
                           color='#B5B5C3'
                           marginLeft="4px"
                         >
-                          {"pesquisador"}
+                          {research.author}
                         </Text>
                       </Box>
                     ) : (

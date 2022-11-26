@@ -8,9 +8,11 @@ export const BodyContainer = styled.div`
 
 export const SearchContainer = styled.div`
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding-bottom: 20px;
   background-color: #F5F5F5;
-  margin: 0 auto;
 `;
 
 export const ResearchsContainer = styled.div`

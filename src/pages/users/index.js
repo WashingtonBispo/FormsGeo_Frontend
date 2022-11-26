@@ -9,9 +9,7 @@ import {
   Input
 } from '@chakra-ui/react';
 
-import {
-  Select,
-} from "chakra-react-select";
+import Select from 'react-select'
 
 import { api } from "../../services/api";
 
@@ -82,6 +80,8 @@ const Users = () => {
       case "Deletar":
         deleteUser(email);
         break;
+      default:
+        break;
     }
   };
 
@@ -125,12 +125,8 @@ const Users = () => {
 
   const deleteUser = (email) => {
     const HandleUser = async (email) => {
-      try{
-        const userData = {
-          email
-        };
-        
-        await api.delete("User", userData);
+      try{      
+        await api.delete("User?Email=" + email);
         setCount(count + 1);
       }
       catch (err){
