@@ -31,13 +31,26 @@ import {
   Input
 } from '@chakra-ui/react';
 
-import {
-  Select,
-} from 'chakra-react-select';
+import Select from 'react-select'
 
 import { MdOutlineAddCircle } from 'react-icons/md';
+import { AiFillFolder, AiFillFolderOpen } from 'react-icons/ai';
 
 import getValidationErrors from '../../utils/getValidationErrors';
+
+import { 
+  adminOptionsPreview, 
+  userOptionsPreview,
+  adminOptionsPreTeste, 
+  userOptionsPreTeste, 
+  adminOptionsActive, 
+  userOptionsActive, 
+  adminOptionsFinal, 
+  userOptionsFinal, 
+  filedOptions,
+  statusOptions
+} from '../../utils/form';
+
 import { api } from '../../services/api';
 
 import Header from '../../components/header';
@@ -57,48 +70,6 @@ import {
 const Forms = () => {
   const token = useSelector((state) => state.authReducer.token);
   const color = useColorModeValue('white', 'gray.700');
-
-  const adminOptions = [
-    {
-      label: 'Ativar',
-      value: 'Ativar',
-    },
-    {
-      label: 'Editar',
-      value: 'Editar',
-    },
-    {
-      label: 'Compartilhar',
-      value: 'Compartilhar'
-    },
-    {
-      label: 'Finalizar',
-      value: 'Finalizar'
-    },
-    {
-      label: 'Deletar',
-      value: 'Deletar'
-    }
-  ]
-
-  const userOptions = [
-    {
-      label: 'Ativar',
-      value: 'Ativar',
-    },
-    {
-      label: 'Editar',
-      value: 'Editar',
-    },
-    {
-      label: 'Compartilhar',
-      value: 'Compartilhar'
-    },
-    {
-      label: 'Finalizar',
-      value: 'Finalizar'
-    }
-  ]
   
   const [isAdmin, setIsAdmin] = useState(false);
   const [researchId, setResearchId] = useState(null);
@@ -115,6 +86,8 @@ const Forms = () => {
   const [hasImg, setHasImg] = useState(false);
   const [shareLink, setShareLink] = useState('');
   const [isEdit, setIsEdit] = useState(false);
+  const [filed, setFiled] = useState(false);
+  const [numberQuestions, setNumberQuestions] = useState(5);
 
   const { isOpen: isOpenResearch, onOpen: onOpenResearch, onClose: onCloseResearch } = useDisclosure();
   const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
@@ -137,9 +110,9 @@ const Forms = () => {
       let response = null;
 
       if (isAdmin)
-        response = await api.get('Form/List', { params: { email: email, filter: filter } });
+        response = await api.get('Form/List', { params: { filter: filter, archived: filed } });
       else
-        response = await api.get('Form/List', { params: { filter: filter } });
+        response = await api.get('Form/List', { params: { email: email, filter: filter, archived: filed } });
 
       let responseData = response.data;
 
@@ -153,19 +126,22 @@ const Forms = () => {
     {
       showErrorToast('Ocorreu um erro ao listar os usuários.');
     }
-  }, [showErrorToast])
+  }, [showErrorToast, isAdmin, filed])
 
   useEffect(() => {
     const decoded = jwt_decode(token);
     
     setEmail(decoded.email);
     
-    if(decoded.role == "Admin"){
+    if(decoded.role === "Admin"){
       setIsAdmin(true);
       getResearchs();
     }
+    else 
+    {
+      getResearchs(decoded.email);
+    }
 
-    getResearchs(decoded.email);
   }, [getResearchs, count, token]);
 
   const handleChangeSearchInfor = useCallback((event) => {
@@ -178,7 +154,7 @@ const Forms = () => {
     }else{
       isAdmin ? getResearchs(null) : getResearchs(email);
     }
-  }, [getResearchs]);
+  }, [getResearchs, email, isAdmin]);
 
   const schema = Yup.object().shape({
     name: Yup.string()
@@ -193,6 +169,7 @@ const Forms = () => {
   const handlePopulateEditModal = (id) => {
     const research = researchs.find(r => r.idForm === id);
 
+    setNumberQuestions(research.numberQuestions);
     setResearchId(id);
     setHasImg(true);
     setIcon(research.icon);
@@ -203,6 +180,8 @@ const Forms = () => {
   }
 
   const handleClearModal = () => {
+    onCloseResearch();
+    setNumberQuestions(5);
     setHasImg(false);
     setIcon(null);
     setName('');
@@ -229,12 +208,55 @@ const Forms = () => {
         changeStatusResearch(id, 3);
         break;
       case 'Deletar':
-        deleteResearch(id);
+        if (!isAdmin)
+          softDeleteResearch(id);
+        else
+          deleteResearch(id);
+        break;
+      case 'Duplicar':
+        copyResearch(id);
+        break;
+      case 'Arquivar':
+        changeStatusResearch(id, 2);
+        break;
+      case 'PreTeste':
+        changeStatusResearch(id, 5);
         break;
       default:
         return;
     }
   };
+
+  const softDeleteResearch = (id) => {
+    const HandleResearch = async (id) => {
+      try{ 
+        await api.delete('Form?formId=' + id);
+        setCount(count + 1);
+      }
+      catch (err){
+        showErrorToast('Ocorreu um erro ao remover a pesquisa.');
+      }
+    }
+    
+    HandleResearch(id);
+  }
+
+  const copyResearch = (id) => {
+    const HandleResearch = async (id) => {
+      try{
+        const researchData = {
+          formId: id
+        };
+        
+        await api.post('Form/Duplicate'  , researchData);
+        setCount(count + 1);
+      }
+      catch (err){
+        showErrorToast('Ocorreu um erro ao duplicar a pesquisa.');
+      }
+    }
+    HandleResearch(id);
+  }
 
   const changeStatusResearch = (id, status) => {
     const HandleResearch = async (id, status) => {
@@ -248,24 +270,21 @@ const Forms = () => {
         setCount(count + 1);
       }
       catch (err){
-        showErrorToast('Ocorreu um erro ao remover um usuário.');
+        showErrorToast('Ocorreu um erro ao atualizar a pesquisa.');
       }
     }
     HandleResearch(id, status);
   }
 
   const deleteResearch = (id) => {
+    console.log(id)
     const HandleResearch = async (id) => {
-      try{
-        const researchData = {
-          formId: id
-        };
-        
-        await api.delete('Form/', researchData);
+      try{ 
+        await api.delete('Form?formId=' + id);
         setCount(count + 1);
       }
       catch (err){
-        showErrorToast('Ocorreu um erro ao remover um usuário.');
+        showErrorToast('Ocorreu um erro ao remover a pesquisa.');
       }
     }
     
@@ -317,6 +336,7 @@ const Forms = () => {
           finalMessage,
           gatherEnd: false,
           gatherPassage: false,
+          status: 1,
           icon: base64Image.replace('data:image/png;base64,', '')
         }
 
@@ -324,14 +344,19 @@ const Forms = () => {
           abortEarly: false,
         });
 
-        await api.post('Form', postData);
+        const formResponse = await api.post('Form', postData);
 
-        navigate('/questoes');
+        navigate('/questoes', {
+          state: {
+            isEdit: false,
+            formId: formResponse.data.formId
+          }
+        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
 
-          if (errors.name != undefined){
+          if (errors.name !== undefined){
             showErrorToast(errors.name);
             setInvalidName(true);
           }
@@ -379,12 +404,21 @@ const Forms = () => {
 
         await api.put('Form', putData);
 
-        navigate('/questoes');
+        const researchQuestions = researchs.find(r => r.idForm === researchId).questions;
+
+        navigate('/questoes', {
+          state: {
+            numberQuestions: numberQuestions,
+            isEdit: true,
+            formId: researchId,
+            questions: researchQuestions
+          }
+        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
 
-          if (errors.name != undefined){
+          if (errors.name !== undefined){
             showErrorToast(errors.name);
             setInvalidName(true);
           }
@@ -401,6 +435,54 @@ const Forms = () => {
     }
 
     editForm();
+  }
+
+  const handleFormOptions = (research) => {
+    let option = filedOptions;
+
+    if (filed){
+      option = filedOptions;
+    }
+    else{
+      switch(research.status){
+        case 1:
+          option = isAdmin ? adminOptionsActive : userOptionsActive;
+          break;
+        case 2:
+          option = filedOptions;
+          break;
+        case 3:
+          option = isAdmin ? adminOptionsFinal : userOptionsFinal;
+          break;
+        case 4:
+          option = isAdmin ? adminOptionsPreview : userOptionsPreview;
+          break;
+        case 5:
+          option = isAdmin ? adminOptionsPreTeste : userOptionsPreTeste;
+          break;
+        default:
+          option = filedOptions;
+      }
+    }
+
+    const theme = (theme) => ({
+      ...theme,
+      spacing: {
+        ...theme.spacing,
+        controlHeight: 35,
+        baseUnit: 2
+      }
+    });
+
+    return (
+      <Select
+        className='basic-single'
+        placeholder='Opções'
+        onChange={(e) => {researchOptionHandle(e, research.idForm)}}
+        options={option}
+        theme={theme}
+      />
+    );    
   }
 
   return (
@@ -431,18 +513,43 @@ const Forms = () => {
       </Box>
 
       <SearchContainer>
-        <InputGroup size='md'>
+        <InputGroup 
+          width="40%"
+        >
           <Input
             value={searchInfor}
             onChange={handleChangeSearchInfor}
             placeholder='Buscar pesquisas'
             backgroundColor='#DDDDDD'
-            maxWidth='800px'
-            margin='0 auto'
             pr='4.5rem'
             type='text'
             />
         </InputGroup>
+
+        {filed ? (
+          <Button 
+            backgroundColor={'#DDDDDD'}
+            color={'black'}
+            mr={3}
+            marginLeft="20px"
+            leftIcon={<AiFillFolderOpen />}
+            onClick={() => {setFiled(false)}}
+          >
+            Pesquisas
+          </Button>
+        ) : (
+          <Button 
+            backgroundColor={'#DDDDDD'}
+            color={'black'}
+            mr={3}
+            marginLeft="20px"
+            leftIcon={<AiFillFolder />}
+            onClick={() => {setFiled(true)}}
+          >
+            Arquivados
+          </Button>
+        )}
+        
       </SearchContainer>
 
       <BodyContainer>
@@ -451,13 +558,15 @@ const Forms = () => {
             return (
               <Box
                 key={research.idForm}
-                maxW={'32%'}
+                maxW={'31%'}
                 w={'full'}
                 bg={color}
                 boxShadow={'2xl'}
-                padding= '2%'
                 borderRadius='12px'
+                marginLeft='1%'
+                marginRight='1%'
                 marginBottom='2%'
+                overflow="hidden"
               >
                 <ResearchContainer>
                   <OptionsContainer>
@@ -468,12 +577,7 @@ const Forms = () => {
                       />
 
                     <Box width='160px'>
-                      <Select
-                        className='basic-single'
-                        placeholder='Opções'
-                        onChange={(e) => {researchOptionHandle(e, research.idForm)}}
-                        options={isAdmin ? adminOptions : userOptions}
-                      />
+                      {handleFormOptions(research)}
                     </Box>
                   </OptionsContainer>
 
@@ -489,6 +593,9 @@ const Forms = () => {
                     <Text 
                       fontSize='16px' 
                       color='#B5B5C3'
+                      minHeight='50px'
+                      maxHeight='50px'
+                      overflowY='hidden'
                     >
                       {research.description && htmlFrom(research.description)}
                     </Text>
@@ -512,7 +619,7 @@ const Forms = () => {
                           color='#B5B5C3'
                           marginLeft="4px"
                         >
-                          {"pesquisador"}
+                          {research.author}
                         </Text>
                       </Box>
                     ) : (
@@ -529,10 +636,11 @@ const Forms = () => {
                           size={'md'} 
                           key={'md'} 
                           variant='subtle' 
-                          color={research.status === 1 ? '#62DBA9' : '#F64E60'}
+                          color={statusOptions[research.status-1].color}
+                          backgroundColor={statusOptions[research.status-1].backgroundColor}
                           marginLeft='8px'
                           >
-                          <TagLabel>{research.status === 1 ? 'Ativo' : 'Finalizado'}</TagLabel>
+                          <TagLabel>{statusOptions[research.status-1].status}</TagLabel>
                         </Tag>
                     </Text>
                   </AboutContainer>
@@ -591,13 +699,25 @@ const Forms = () => {
                     </Box>
                   </InforContainer>
                 </ResearchContainer>
+
+                <Box 
+                  width="100%"
+                  height="4px"
+                  backgroundColor={statusOptions[research.status-1].bottom}
+                />
               </Box>
             );  
           })}
         </ResearchsContainer>
       </BodyContainer>
 
-      <Modal blockScrollOnMount={false} isOpen={isOpenResearch} onClose={onCloseResearch}>
+      <Modal 
+        blockScrollOnMount={false} 
+        isOpen={isOpenResearch} 
+        onClose={onCloseResearch}
+        scrollBehavior={'inside'}
+        size={'4xl'}
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader></ModalHeader>
@@ -627,7 +747,7 @@ const Forms = () => {
                     }}
                   />
 
-                  <MdOutlineAddCircle />
+                  <MdOutlineAddCircle color="#20D489" />
                   
                   {!hasImg ? (
                     <Text
@@ -654,7 +774,7 @@ const Forms = () => {
                   onChange={handleChangeName}
                   pr='4.5rem'
                   type='text'
-                  marginBottom='8px'
+                  marginBottom='16px'
                   />
 
                 <Input
@@ -663,15 +783,26 @@ const Forms = () => {
                   onChange={handleChangeLinkTerm}
                   pr='4.5rem'
                   type='text'
-                  marginBottom='8px'
+                  marginBottom='16px'
                   />
 
                 <Box
-                  marginBottom='8px'
+                  marginBottom='16px'
                 >
                   <CKEditor
                     editor={ ClassicEditor }
                     data={description}
+                    onInit={(editor) => {
+                      // You can store the "editor" and use when it is needed.
+                      // console.log("Editor is ready to use!", editor);
+                      editor.editing.view.change((writer) => {
+                      writer.setStyle(
+                          "height",
+                          "1000px",
+                          editor.editing.view.document.getRoot()
+                      );
+                      });
+                    }}
                     onFocus={() => {
                       if (description === '<p>Descrição e termo de  consentimento</p>')
                         setDescription('');
@@ -679,7 +810,7 @@ const Forms = () => {
                     onChange={ ( event, editor ) => {
                       const data = editor.getData();
                       setDescription(data);
-                  } }
+                    }}
                   />
                 </Box>
                 
@@ -774,6 +905,7 @@ const Forms = () => {
               backgroundColor={'#F5F8FA'}
               color={'#7E8299'}
               mr={3}
+              onClick={onCloseShareResearch}
             >
               Voltar
             </Button>

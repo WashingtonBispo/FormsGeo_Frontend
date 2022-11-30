@@ -35,7 +35,7 @@ export const parsePicturesToBase64 = async (files) => {
 export const parseBase64ToPicture = async (picture) => {
   const file = await imageCompression.getFilefromDataUrl(
     `data:image/png;base64,${picture}`,
-    'file-1',
+    'Alterar icone',
   );
 
   const pic = {

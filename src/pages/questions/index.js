@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from "react";
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@chakra-ui/react'
+import React, {useCallback, useEffect, useState} from "react";
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useToast, useDisclosure } from '@chakra-ui/react'
 
 import {
   Box,
@@ -18,18 +18,19 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  IconButton
+  IconButton,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton
 } from '@chakra-ui/react';
-
-import * as Yup from 'yup';
 
 import { AiFillFileAdd } from 'react-icons/ai'
 import { FaTrashAlt  } from 'react-icons/fa'
 import { BsFillArrowDownSquareFill, BsFillArrowUpSquareFill } from 'react-icons/bs'
-
-import authAction from "../../store/action/auth";
-import getValidationErrors from '../../utils/getValidationErrors'
-import { api } from "../../services/api";
 
 import Header from "../../components/header";
 import CurrentRoute from "../../components/currentRoute";
@@ -37,6 +38,8 @@ import OpenAnswer from "../../components/openAnswer";
 import QuestionMultiple from "../../components/QuestionMultiple";
 import AncLikert from "../../components/ancLikert";
 import Likert from "../../components/likert";
+
+import { api } from '../../services/api';
 
 import {
   BodyContainer,
@@ -61,32 +64,60 @@ const Questions = () => {
   const [questionsList, setQuestionsList] = useState([]);
   const [pageItens, setPageItens] = useState(5);
   const [showedQuestion, setShowedQuestion] = useState(0);
-  const [show, setShow] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const { state } = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
   const color = useColorModeValue('white', 'gray.700');
-  
-  useEffect(() => {
-    
-  }, []);
 
-  const schema = Yup.object().shape({
-    name: Yup.string()
-      .required('Nome obrigatório')
-      .min(4, 'Nome de no minimo 8 caracteres')
-  });
-  
-  const handleClick = () => setShow(!show);
-
-  const showErrorToast = (message) => {
+  const showErrorToast = useCallback((message) => {
     toast({
       title: message,
       position: "top-right",
       status: "error",
       isClosable: true,
     });
-  }
+  }, [toast]);
+
+  const updateFormQuestions = useCallback(() => {
+    try
+    {
+      const questionsJSON = JSON.stringify(questionsList);
+      
+      const updateForm = async () => {
+        const putData = {
+          formId: state.formId,
+          numberQuestions: pageItens,
+          questions: questionsJSON
+        }
+        
+        await api.put('Form', putData);
+      };
+    
+      updateForm();
+    } 
+    catch
+    {
+      showErrorToast("Não foi possível atualizar o formulário!");
+    }
+  }, [questionsList, state, showErrorToast, pageItens]);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      updateFormQuestions();
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [updateFormQuestions]);
+
+  useEffect(() => {
+    if (state.isEdit){
+      const questions = JSON.parse(state.questions);
+      setPageItens(state.numberQuestions);
+      
+      if (questions.length > 0) setQuestionsList(questions);
+    }
+  }, [state]);
 
   const addQuestion = (type) => {
     let tempQuestionList = questionsList.map(q => q);
@@ -177,37 +208,41 @@ const Questions = () => {
   }
 
   const swapUpQuestion = (i) => {
-    i--;
+    if (i > 1){
+      i--;
 
-    let tempQuestionList = questionsList.map(q => q);
+      let tempQuestionList = questionsList.map(q => q);
 
-    // swap index
-    tempQuestionList[i].index--;
-    tempQuestionList[i - 1].index++;
+      // swap index
+      tempQuestionList[i].index--;
+      tempQuestionList[i - 1].index++;
 
-    // swap question
-    var tempQuestion = tempQuestionList[i];
-    tempQuestionList[i] = tempQuestionList[i - 1];
-    tempQuestionList[i - 1] = tempQuestion;
+      // swap question
+      var tempQuestion = tempQuestionList[i];
+      tempQuestionList[i] = tempQuestionList[i - 1];
+      tempQuestionList[i - 1] = tempQuestion;
 
-    setQuestionsList(tempQuestionList);
+      setQuestionsList(tempQuestionList);
+    }
   }
 
   const swapDownQuestion = (i) => {
-    i--;
-
-    let tempQuestionList = questionsList.map(q => q);
-
-    // swap index
-    tempQuestionList[i].index++;
-    tempQuestionList[i + 1].index--;
-
-    // swap question
-    var tempQuestion = tempQuestionList[i];
-    tempQuestionList[i] = tempQuestionList[i + 1];
-    tempQuestionList[i + 1] = tempQuestion;
-
-    setQuestionsList(tempQuestionList);
+    if (i < questionsList.length){
+      i--;
+      
+      let tempQuestionList = questionsList.map(q => q);
+      
+      // swap index
+      tempQuestionList[i].index++;
+      tempQuestionList[i + 1].index--;
+      
+      // swap question
+      var tempQuestion = tempQuestionList[i];
+      tempQuestionList[i] = tempQuestionList[i + 1];
+      tempQuestionList[i + 1] = tempQuestion;
+      
+      setQuestionsList(tempQuestionList);
+    }
   }
 
   const deleteQuestion = (i) => {
@@ -283,28 +318,6 @@ const Questions = () => {
         return (<></>);
     }
   }
-  
-  const handleSubmitQuestion = () => {
-    const postForm = async () => {
-      try{
-        const postData = {
-          questions: questionsList
-        }
-
-        await schema.validate(postData, {
-          abortEarly: false,
-        });
-
-        navigate('/');
-      } catch (err) {
-        showErrorToast("Ocorreu um erro ao fazer o cadastro do formulário de pesquisa.");
-
-        return;
-      }
-    }
-
-    postForm();
-  }
 
   return (
     <>
@@ -322,9 +335,17 @@ const Questions = () => {
           borderRadius="12px"
           margin="0 auto"
         >
+          <Text 
+            fontSize='16px' 
+            color="#3F4254" 
+            marginLeft="8px"
+            >
+            Digite a quantidade de questões presentes em uma página do dispositivo móvel:
+          </Text>
+
           <NumberInput 
             onChange={e => setPageItens(e)}
-            defaultValue={pageItens} 
+            value={pageItens}
             min={1} 
             max={20} 
             clampValueOnBlur={false}
@@ -339,15 +360,24 @@ const Questions = () => {
           <Box
             margin="12px 0"
             display="flex"
+            alignItems="center"
             justifyContent="right"
           >
+            <Text 
+              fontSize='18px' 
+              color="#3F4254" 
+              marginRight="8px"
+              >
+              Cadastrar questão:
+            </Text>
+          
             <Menu>
               <MenuButton
-                
                 as={IconButton}
                 aria-label='AddQuestion'
                 icon={<AiFillFileAdd />}
                 variant='outline'
+                color={"#50CD89"}
                 />
               <MenuList>
                 <MenuItem
@@ -390,12 +420,13 @@ const Questions = () => {
                   key={question.index}
                   width="100%"
                   display="flex"
-                  justifyContent="center"
+                  justifyContent="space-between"
                   alignItems="center"
-                  margin="6px 0"
+                  padding="6px 4%"
                 >
                   <Tag 
                     onClick={() => {changeShowedQuestion(question.index)}}
+                    cursor="pointer"
                     size={'md'} 
                     key={'md'} 
                     variant='subtle'
@@ -407,9 +438,12 @@ const Questions = () => {
 
                   <Text 
                     onClick={() => {changeShowedQuestion(question.index)}}
+                    cursor="pointer"
                     fontSize='18px' 
                     color="#3F4254" 
                     marginLeft="8px"
+                    maxWidth="190px"
+                    textAlign="center"
                     >
                     {questionTypes[question.type]}
                   </Text>
@@ -421,6 +455,7 @@ const Questions = () => {
                       aria-label='UpQuestion'
                       icon={<BsFillArrowUpSquareFill />}
                       variant='outline'
+                      color="#00A3FF" 
                     />
                     
                     <IconButton
@@ -429,6 +464,7 @@ const Questions = () => {
                       aria-label='DownQuestion'
                       icon={<BsFillArrowDownSquareFill />}
                       variant='outline'
+                      color="#00A3FF"
                     />
                     
                     <IconButton
@@ -437,6 +473,7 @@ const Questions = () => {
                       aria-label='DeleteQuestion'
                       icon={<FaTrashAlt />}
                       variant='outline'
+                      color="#F1416C"
                     />
                   </ButtonIconContainer>
                 </Box>
@@ -456,7 +493,7 @@ const Questions = () => {
         >
           <AddQuestionContainer>
             <AddQuestionBody>
-              {questionsList.length == 0 ? (
+              {questionsList.length === 0 ? (
                 <></>
               ) : (
                 renderQuestion()
@@ -469,12 +506,16 @@ const Questions = () => {
                 color={'#7E8299'}
                 marginTop={'24px'} 
                 size='md'
+                onClick={() => {
+                  updateFormQuestions();
+                  navigate('/');
+                }}
               >
                 Voltar
               </Button>
 
               <Button
-                onClick={handleSubmitQuestion}
+                onClick={onOpen}
                 backgroundColor={'#00A3FF'}
                 color={'white'}
                 marginTop={'24px'} 
@@ -486,6 +527,64 @@ const Questions = () => {
           </AddQuestionContainer>
         </Box>
       </BodyContainer>
+
+      <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody
+            display='flex'
+            justifyContent='center'
+          >
+            <Text 
+              fontSize='15px' 
+              color='#3F4254'
+              width='100%'
+              border='2px dotted #E4E6EF'
+              padding='4px'
+              textAlign='center'
+            >
+              Deseja seguir para as funcionalidades de geolocalização ou salvar o formulário?
+            </Text>
+          </ModalBody>
+
+          <ModalFooter 
+            display='flex'
+            justifyContent='center'
+          >
+            <Button 
+              backgroundColor={'#F5F8FA'}
+              color={'#7E8299'}
+              mr={3}
+            >
+              Voltar
+            </Button>
+
+            <Button
+              onClick={() => {
+                updateFormQuestions();
+                navigate("/");
+              }}
+              backgroundColor={'#00A3FF'}
+              color={'white'}
+              mr={3}
+            >
+              Salvar
+            </Button>
+
+            <Button
+              onClick={() => {}}
+              backgroundColor={'#00A3FF'}
+              color={'white'}
+              mr={3}
+            >
+              Próximo
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

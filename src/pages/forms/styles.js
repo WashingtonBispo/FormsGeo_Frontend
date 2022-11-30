@@ -8,25 +8,27 @@ export const BodyContainer = styled.div`
 
 export const SearchContainer = styled.div`
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding-bottom: 20px;
   background-color: #F5F5F5;
-  margin: 0 auto;
 `;
 
 export const ResearchsContainer = styled.div`
   background-color: #F5F5F5;
   max-width: 1400px;
-  width: 96%;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
   flex-wrap: wrap;
 `;
 
 export const ResearchContainer = styled.div`
   display: flex;
   flex-direction: column;
+  padding: 2%;
 `;
 
 export const OptionsContainer = styled.div`
@@ -50,11 +52,23 @@ export const InforContainer = styled.div`
 `;
 
 export const AddResearchContainer = styled.div`
+  .ck-editor__editable
+  {
+      min-height: 150px !important;
+      max-height: 400px !important;
+  }
+
   .img-icon {
     cursor: pointer;
     margin-bottom: 8px;
     display: flex;
     flex-direction: row;
-    align-items: center
+    align-items: center;
+    margin-bottom: 16px;
+    border: 1px dotted #E4E6EF;
+    width: 100%;
+    border-radius: 8px;
+    padding: 6px;
+    background-color: #f5f5f5;
   }
 `;
