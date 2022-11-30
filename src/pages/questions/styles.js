@@ -16,6 +16,8 @@ export const QuestionsListContainer = styled.div`
   align-items: center;
   border: 1px dotted #E4E6EF;
   border-radius: 8px;
+  overflow-y: scroll;
+  max-height: 75%;
 `;
 
 export const AddQuestionContainer = styled.div`

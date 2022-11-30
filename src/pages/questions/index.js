@@ -88,6 +88,7 @@ const Questions = () => {
       const updateForm = async () => {
         const putData = {
           formId: state.formId,
+          numberQuestions: pageItens,
           questions: questionsJSON
         }
         
@@ -100,18 +101,19 @@ const Questions = () => {
     {
       showErrorToast("Não foi possível atualizar o formulário!");
     }
-  }, [questionsList, state, showErrorToast]);
+  }, [questionsList, state, showErrorToast, pageItens]);
   
   useEffect(() => {
     const interval = setInterval(() => {
       updateFormQuestions();
-    }, 30000);
+    }, 7000);
     return () => clearInterval(interval);
   }, [updateFormQuestions]);
 
   useEffect(() => {
     if (state.isEdit){
       const questions = JSON.parse(state.questions);
+      setPageItens(state.numberQuestions);
       
       if (questions.length > 0) setQuestionsList(questions);
     }
@@ -343,7 +345,7 @@ const Questions = () => {
 
           <NumberInput 
             onChange={e => setPageItens(e)}
-            defaultValue={pageItens} 
+            value={pageItens}
             min={1} 
             max={20} 
             clampValueOnBlur={false}
@@ -440,7 +442,7 @@ const Questions = () => {
                     fontSize='18px' 
                     color="#3F4254" 
                     marginLeft="8px"
-                    maxWidth="200px"
+                    maxWidth="190px"
                     textAlign="center"
                     >
                     {questionTypes[question.type]}
@@ -504,7 +506,10 @@ const Questions = () => {
                 color={'#7E8299'}
                 marginTop={'24px'} 
                 size='md'
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  updateFormQuestions();
+                  navigate('/');
+                }}
               >
                 Voltar
               </Button>

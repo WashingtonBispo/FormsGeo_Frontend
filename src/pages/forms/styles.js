@@ -52,6 +52,12 @@ export const InforContainer = styled.div`
 `;
 
 export const AddResearchContainer = styled.div`
+  .ck-editor__editable
+  {
+      min-height: 150px !important;
+      max-height: 400px !important;
+  }
+
   .img-icon {
     cursor: pointer;
     margin-bottom: 8px;

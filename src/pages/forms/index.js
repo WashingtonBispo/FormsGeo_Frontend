@@ -87,6 +87,7 @@ const Forms = () => {
   const [shareLink, setShareLink] = useState('');
   const [isEdit, setIsEdit] = useState(false);
   const [filed, setFiled] = useState(false);
+  const [numberQuestions, setNumberQuestions] = useState(5);
 
   const { isOpen: isOpenResearch, onOpen: onOpenResearch, onClose: onCloseResearch } = useDisclosure();
   const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
@@ -109,9 +110,9 @@ const Forms = () => {
       let response = null;
 
       if (isAdmin)
-        response = await api.get('Form/List', { params: { email: email, filter: filter, filed: filed } });
+        response = await api.get('Form/List', { params: { filter: filter, archived: filed } });
       else
-        response = await api.get('Form/List', { params: { filter: filter, filed: filed } });
+        response = await api.get('Form/List', { params: { email: email, filter: filter, archived: filed } });
 
       let responseData = response.data;
 
@@ -168,6 +169,7 @@ const Forms = () => {
   const handlePopulateEditModal = (id) => {
     const research = researchs.find(r => r.idForm === id);
 
+    setNumberQuestions(research.numberQuestions);
     setResearchId(id);
     setHasImg(true);
     setIcon(research.icon);
@@ -179,6 +181,7 @@ const Forms = () => {
 
   const handleClearModal = () => {
     onCloseResearch();
+    setNumberQuestions(5);
     setHasImg(false);
     setIcon(null);
     setName('');
@@ -402,8 +405,10 @@ const Forms = () => {
         await api.put('Form', putData);
 
         const researchQuestions = researchs.find(r => r.idForm === researchId).questions;
+
         navigate('/questoes', {
           state: {
+            numberQuestions: numberQuestions,
             isEdit: true,
             formId: researchId,
             questions: researchQuestions
@@ -588,6 +593,9 @@ const Forms = () => {
                     <Text 
                       fontSize='16px' 
                       color='#B5B5C3'
+                      minHeight='50px'
+                      maxHeight='50px'
+                      overflowY='hidden'
                     >
                       {research.description && htmlFrom(research.description)}
                     </Text>
@@ -784,6 +792,17 @@ const Forms = () => {
                   <CKEditor
                     editor={ ClassicEditor }
                     data={description}
+                    onInit={(editor) => {
+                      // You can store the "editor" and use when it is needed.
+                      // console.log("Editor is ready to use!", editor);
+                      editor.editing.view.change((writer) => {
+                      writer.setStyle(
+                          "height",
+                          "1000px",
+                          editor.editing.view.document.getRoot()
+                      );
+                      });
+                    }}
                     onFocus={() => {
                       if (description === '<p>Descrição e termo de  consentimento</p>')
                         setDescription('');
@@ -791,7 +810,7 @@ const Forms = () => {
                     onChange={ ( event, editor ) => {
                       const data = editor.getData();
                       setDescription(data);
-                  } }
+                    }}
                   />
                 </Box>
                 
@@ -886,6 +905,7 @@ const Forms = () => {
               backgroundColor={'#F5F8FA'}
               color={'#7E8299'}
               mr={3}
+              onClick={onCloseShareResearch}
             >
               Voltar
             </Button>
