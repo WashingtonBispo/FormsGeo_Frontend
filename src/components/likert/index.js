@@ -34,6 +34,8 @@ const Likert = (props) => {
   const setAlternative = props.setAlternative;
   const invalidAlternative = props.invalidAlternative;
   const setInvalidAlternative = props.setInvalidAlternative;
+  const indexAlternative = props.indexAlternative;
+  const setIndexAlternative = props.setIndexAlternative;
 
   const toast = useToast();
 
@@ -56,7 +58,7 @@ const Likert = (props) => {
       try{
         const alternativeData = {
           value: alternative,
-          index: !questionsList[index].alternatives ? 1 : questionsList[index].alternatives.length + 1
+          index: indexAlternative
         }
     
         await schema.validate(alternativeData, {
@@ -64,6 +66,11 @@ const Likert = (props) => {
         });
         
         let tempQuestionList = questionsList.map(q => q);
+
+        if (tempQuestionList[index].alternatives.length > 0)
+          tempQuestionList[index].alternatives.forEach(element => {
+            if(element.index == alternativeData.index) throw "error";
+          });
     
         let alternativeList = [...tempQuestionList[index].alternatives, alternativeData];
     
@@ -115,6 +122,10 @@ const Likert = (props) => {
     setQuestionsList(tempQuestionList);
   }
 
+  const comparIndex = (a, b) => {
+    return a.index - b.index;
+  }
+
   return (
     <>
       <QuestionContainer>
@@ -137,11 +148,11 @@ const Likert = (props) => {
           </Text>
 
           {!!questionsList[index].alternatives &&
-          questionsList[index].alternatives.map((alternative, index) => {
+          questionsList[index].alternatives.sort(comparIndex).map((alternative, index) => {
             return (
               <Box>
                 <Box 
-                  key={alternative.index}
+                  key={index}
                   width="100%"
                   display="flex"
                   justifyContent="space-between"
@@ -154,13 +165,13 @@ const Likert = (props) => {
                     <Tag 
                       cursor="pointer"
                       size={'md'} 
-                      key={'md'} 
+                      key={index} 
                       variant='subtle'
                       backgroundColor={'#F1FAFF'}
                       color={'#00A3FF'}
                       marginLeft="6px"
                       >
-                      <TagLabel>{index + 1}</TagLabel>
+                      <TagLabel>{alternative.index}</TagLabel>
                     </Tag>
 
                     <Text 
@@ -200,6 +211,15 @@ const Likert = (props) => {
               />
 
             <InputGroup size='md'>
+             <Input
+                placeholder="Adicionar indice da alternativa"
+                isInvalid={invalidAlternative}
+                value={indexAlternative}
+                onChange={(e) => setIndexAlternative(e.target.value)}
+                pr='4.5rem'
+                type='number'
+              />
+
               <Input
                 placeholder="Adicionar nova alternativa"
                 isInvalid={invalidAlternative}

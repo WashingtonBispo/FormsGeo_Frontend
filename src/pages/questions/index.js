@@ -158,6 +158,7 @@ const Questions = () => {
   }
 
   const changeShowedQuestion = (index) => {
+    setQuestionMultipleIndexAlternative('');
     setQuestionMultipleAlternative('');
     setInvalidQuestionMultipleAlternative(false);
     setShowedQuestion(index - 1);
@@ -185,7 +186,7 @@ const Questions = () => {
     return {
       index: questionsList.length+1,
       question: "",
-      alternatives: ["", "", "1", 0],
+      alternatives: ["", "", "1", 2, 0, 0],
       type: 2
     }
   }
@@ -429,7 +430,6 @@ const Questions = () => {
 
           <QuestionsListContainer>
             {questionsList.map((question) => {
-              console.log(question)
               return (
                 <Box 
                   key={question.index}

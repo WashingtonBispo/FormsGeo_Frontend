@@ -64,7 +64,7 @@ const QuestionMultiple = (props) => {
       try{
         const alternativeData = {
           value: alternative,
-          index: !questionsList[index].alternatives ? 1 : questionsList[index].alternatives.length + 1
+          index: indexAlternative
         }
     
         await schema.validate(alternativeData, {
@@ -72,14 +72,20 @@ const QuestionMultiple = (props) => {
         });
         
         let tempQuestionList = questionsList.map(q => q);
+      
+        if (tempQuestionList[index].alternatives.length > 0)
+          tempQuestionList[index].alternatives.forEach(element => {
+            if(element.index == alternativeData.index) throw "error";
+          });
     
         let alternativeList = [...tempQuestionList[index].alternatives, alternativeData];
     
         tempQuestionList[index].alternatives = alternativeList;
-    
+
         setQuestionsList(tempQuestionList);
     
         setAlternative("");
+        setIndexAlternative("");
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
@@ -123,6 +129,10 @@ const QuestionMultiple = (props) => {
     setQuestionsList(tempQuestionList);
   }
 
+  const comparIndex = (a, b) => {
+    return a.index - b.index;
+  }
+
   return (
     <>
       <QuestionContainer>
@@ -145,10 +155,10 @@ const QuestionMultiple = (props) => {
           </Text>
 
           {!!questionsList[index].alternatives &&
-          questionsList[index].alternatives.map((alternative, index) => {
+          questionsList[index].alternatives.sort(comparIndex).map((alternative, index) => {
             return (
               <Box 
-                key={alternative.index}
+                key={index}
                 width="100%"
                 display="flex"
                 justifyContent="space-between"
@@ -167,7 +177,7 @@ const QuestionMultiple = (props) => {
                     color={'#00A3FF'}
                     marginLeft="6px"
                     >
-                    <TagLabel>{index + 1}</TagLabel>
+                    <TagLabel>{alternative.index}</TagLabel>
                   </Tag>
                   
                   <Text 
@@ -207,7 +217,7 @@ const QuestionMultiple = (props) => {
 
             <InputGroup size='md'>
               <Input
-                placeholder="Adicionar nova alternativa"
+                placeholder="Adicionar indice da alternativa"
                 isInvalid={invalidAlternative}
                 value={indexAlternative}
                 onChange={(e) => setIndexAlternative(e.target.value)}

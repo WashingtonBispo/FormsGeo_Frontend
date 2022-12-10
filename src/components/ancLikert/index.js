@@ -123,8 +123,8 @@ const AncLikert = (props) => {
               <NumberInput 
                 onChange={e => handleAncQuestion(e, 3)}
                 value={questionsList[index].alternatives[3]} 
-                min={2}
                 clampValueOnBlur={false}
+                min={2}
                 >
                 <NumberInputField />
                 <NumberInputStepper>
@@ -134,7 +134,45 @@ const AncLikert = (props) => {
               </NumberInput>
             </Box>
           ) : (
-            <></>
+            <Box>
+              <Text 
+                fontSize='18px' 
+                color="#3F4254" 
+                marginLeft="8px"
+                >
+                Valor máximo do slider
+              </Text>
+              <NumberInput 
+                onChange={e => handleAncQuestion(e, 3)}
+                value={questionsList[index].alternatives[4]} 
+                clampValueOnBlur={false}
+                >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+
+              <Text 
+                fontSize='18px' 
+                color="#3F4254" 
+                marginLeft="8px"
+                >
+                Valor minímo do slider
+              </Text>
+              <NumberInput 
+                onChange={e => handleAncQuestion(e, 3)}
+                value={questionsList[index].alternatives[5]} 
+                clampValueOnBlur={false}
+                >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </Box>
           )}
           
         </QuestionMultipleContainer>
