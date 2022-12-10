@@ -60,6 +60,7 @@ const Questions = () => {
   ]
 
   const [questionMultipleAlternative, setQuestionMultipleAlternative] = useState('');
+  const [questionMultipleIndexAlternative, setQuestionMultipleIndexAlternative] = useState('');
   const [invalidQuestionMultipleAlternative, setInvalidQuestionMultipleAlternative] = useState(false);
   const [questionsList, setQuestionsList] = useState([]);
   const [pageItens, setPageItens] = useState(5);
@@ -281,7 +282,9 @@ const Questions = () => {
             setAlternative={setQuestionMultipleAlternative}
             invalidAlternative={invalidQuestionMultipleAlternative}
             setInvalidAlternative={setInvalidQuestionMultipleAlternative}
-          />);
+            indexAlternative={questionMultipleIndexAlternative}
+            setIndexAlternative={setQuestionMultipleIndexAlternative}
+            />);
 
       case 2:
         return (<AncLikert 
@@ -300,6 +303,8 @@ const Questions = () => {
             setAlternative={setQuestionMultipleAlternative}
             invalidAlternative={invalidQuestionMultipleAlternative}
             setInvalidAlternative={setInvalidQuestionMultipleAlternative}
+            indexAlternative={questionMultipleIndexAlternative}
+            setIndexAlternative={setQuestionMultipleIndexAlternative}
           />);
 
       case 4:
@@ -312,12 +317,21 @@ const Questions = () => {
             setAlternative={setQuestionMultipleAlternative}
             invalidAlternative={invalidQuestionMultipleAlternative}
             setInvalidAlternative={setInvalidQuestionMultipleAlternative}
+            indexAlternative={questionMultipleIndexAlternative}
+            setIndexAlternative={setQuestionMultipleIndexAlternative}
           />);
       
       default:
         return (<></>);
     }
   }
+
+  const truncateString = (phrase, maxSize) => {
+    if (phrase.length > maxSize)
+      return phrase.substring(0, maxSize) + '...';
+    else
+      return phrase.substring(0, maxSize);
+  };
 
   return (
     <>
@@ -415,6 +429,7 @@ const Questions = () => {
 
           <QuestionsListContainer>
             {questionsList.map((question) => {
+              console.log(question)
               return (
                 <Box 
                   key={question.index}
@@ -445,7 +460,7 @@ const Questions = () => {
                     maxWidth="190px"
                     textAlign="center"
                     >
-                    {questionTypes[question.type]}
+                    {question.question === '' ? questionTypes[question.type] : truncateString(question.question, 10)}
                   </Text>
 
                   <ButtonIconContainer>

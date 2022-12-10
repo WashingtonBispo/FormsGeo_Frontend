@@ -8,7 +8,12 @@ import {
   Box,
   Text,
   Tag,
-  TagLabel
+  TagLabel,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from '@chakra-ui/react'
 
 import * as Yup from 'yup';
@@ -35,6 +40,8 @@ const QuestionMultiple = (props) => {
   const setAlternative = props.setAlternative;
   const invalidAlternative = props.invalidAlternative;
   const setInvalidAlternative = props.setInvalidAlternative;
+  const indexAlternative = props.indexAlternative;
+  const setIndexAlternative = props.setIndexAlternative;
 
   const toast = useToast();
 
@@ -199,6 +206,15 @@ const QuestionMultiple = (props) => {
               />
 
             <InputGroup size='md'>
+              <Input
+                placeholder="Adicionar nova alternativa"
+                isInvalid={invalidAlternative}
+                value={indexAlternative}
+                onChange={(e) => setIndexAlternative(e.target.value)}
+                pr='4.5rem'
+                type='number'
+              />
+
               <Input
                 placeholder="Adicionar nova alternativa"
                 isInvalid={invalidAlternative}
