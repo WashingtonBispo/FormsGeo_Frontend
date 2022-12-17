@@ -29,7 +29,7 @@ const AncLikert = (props) => {
 
   const handleAncQuestion = (e, type) => {
     let tempQuestionList = questionsList.map(q => q);
-
+    
     tempQuestionList[index].alternatives[type] = e;
 
     setQuestionsList(tempQuestionList);
@@ -134,46 +134,48 @@ const AncLikert = (props) => {
               </NumberInput>
             </Box>
           ) : (
-            <Box>
-              <Text 
-                fontSize='18px' 
-                color="#3F4254" 
-                marginLeft="8px"
-                >
-                Valor máximo do slider
-              </Text>
-              <NumberInput 
-                onChange={e => handleAncQuestion(e, 3)}
-                value={questionsList[index].alternatives[4]} 
-                clampValueOnBlur={false}
-                >
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-
-              <Text 
-                fontSize='18px' 
-                color="#3F4254" 
-                marginLeft="8px"
-                >
-                Valor minímo do slider
-              </Text>
-              <NumberInput 
-                onChange={e => handleAncQuestion(e, 3)}
-                value={questionsList[index].alternatives[5]} 
-                clampValueOnBlur={false}
-                >
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-            </Box>
+            <></>
           )}
+
+          <Box>
+            <Text 
+              fontSize='18px' 
+              color="#3F4254" 
+              marginLeft="8px"
+              >
+              {questionsList[index].alternatives[2] === "2" ? "Valor máximo do marcador" : "Valor máximo do slider"}
+            </Text>
+            <NumberInput 
+              onChange={e => handleAncQuestion(e, 4)}
+              value={questionsList[index].alternatives[4]} 
+              clampValueOnBlur={false}
+              >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+
+            <Text 
+              fontSize='18px' 
+              color="#3F4254" 
+              marginLeft="8px"
+              >
+              {questionsList[index].alternatives[2] === "2" ? "Valor mínimo do marcador" : "Valor mínimo do slider"}
+            </Text>
+            <NumberInput 
+              onChange={e => handleAncQuestion(e, 5)}
+              value={questionsList[index].alternatives[5]} 
+              clampValueOnBlur={false}
+              >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </Box>
           
         </QuestionMultipleContainer>
       </QuestionContainer>
