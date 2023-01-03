@@ -590,7 +590,9 @@ const Questions = () => {
             </Button>
 
             <Button
-              onClick={() => {}}
+              onClick={() => {
+                navigate("/geografia");
+              }}
               backgroundColor={'#00A3FF'}
               color={'white'}
               mr={3}
