@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 
 import {
   Box,
@@ -26,7 +26,9 @@ import {
 } from './styles';
 
 const Geo = () => {
-  const position = [51.505, -0.09]
+  const [initialPosition, setInitialPosition] = useState(null);
+  const [selectedPosition, setSelectedPosition] = useState([0,0]);
+
   const color = useColorModeValue('white', 'gray.700');
 
   const toast = useToast();
@@ -42,8 +44,55 @@ const Geo = () => {
   }, [toast]);
 
   useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+            const { latitude, longitude } = position.coords;
+            setInitialPosition([latitude, longitude]);
+        });
+    } else {
+      showErrorToast("Serviços de geolocalização não são suportados por este browser");
+    }
+  }, [showErrorToast]);
 
-  }, []);
+  const Markers = () => {
+
+    const map = useMapEvents({
+        click(e) {                                
+            setSelectedPosition([
+                e.latlng.lat,
+                e.latlng.lng
+            ]);                
+        },            
+    })
+
+    return (
+        selectedPosition ? 
+            <Marker           
+            key={selectedPosition[0]}
+            position={selectedPosition}
+            interactive={false} 
+            />
+        : null
+    )   
+    
+}
+
+  const renderMap = useCallback(() => {
+    return (
+      <MapContainer 
+        center={initialPosition} 
+        zoom={13} 
+        scrollWheelZoom
+        onClick={(e) => {console.log("clicado")}}
+      >
+        <Markers />
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+      </MapContainer>
+    );
+  }, [selectedPosition, initialPosition]);
 
   return (
     <>
@@ -53,6 +102,7 @@ const Geo = () => {
         <ResearchsContainer>
           <Box
             w={'100%'}
+            maxW="1400px"
             bg={color}
             boxShadow={'2xl'}
             borderRadius='12px'
@@ -97,17 +147,7 @@ const Geo = () => {
               </InforContainer>
               
               <MapBodyContainer>
-                <MapContainer center={position} zoom={13} scrollWheelZoom={false}>
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={position}>
-                    <Popup>
-                      A pretty CSS3 popup. <br /> Easily customizable.
-                    </Popup>
-                  </Marker>
-                </MapContainer>
+                {initialPosition ? renderMap() : (<></>)}
               </MapBodyContainer>
             </Box>
 
