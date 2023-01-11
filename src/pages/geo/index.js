@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, useMapEvents, Circle } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMapEvents, Circle, Popup } from 'react-leaflet'
 
 import {
   Box,
@@ -42,9 +42,11 @@ const Geo = () => {
   const [initialPosition, setInitialPosition] = useState(null);
   const [positions, setPositions] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState([0,0]);
-  const [selectedRadio, setSelectedRadio] = useState(0);
+  const [selectedRadio, setSelectedRadio] = useState(10);
   const [selectedFormFinalGetGeo, setSelectedFormFinalGetGeo] = useState(false);
   const [selectedAsyncGetGeo, setSelectedAsyncGetGeo] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editPosition, setEditPosition] = useState(null);
 
   const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
 
@@ -79,7 +81,9 @@ const Geo = () => {
             setSelectedPosition([
                 e.latlng.lat,
                 e.latlng.lng
-            ]); 
+            ]);
+
+            setIsEdit(false);
             
             onOpenShareResearch();
         },            
@@ -94,9 +98,40 @@ const Geo = () => {
 
     setPositions(tempPositions);
 
-    setSelectedAsyncGetGeo(true);
+    setSelectedRadio(10);
 
     onCloseShareResearch();
+  };
+
+  const handleUpdateSelectedPosition = () => {
+    let tempPositions = positions.map(p => p);
+    
+    tempPositions[editPosition[3]][2] = selectedRadio;
+
+    setPositions(tempPositions);
+
+    onCloseShareResearch();
+  };
+
+  const handleDeleteSelectedPosition = () => {
+    let tempPositions = positions.map(p => p);
+    
+    tempPositions.splice(editPosition[3], 1);
+
+    setPositions(tempPositions);
+
+    onCloseShareResearch();
+  };
+
+  const handleEditMapMarker = (position, index) => {
+    let tempEditPosition = position;
+    tempEditPosition.push(index);
+
+    setEditPosition(position);
+    
+    setIsEdit(true);
+
+    onOpenShareResearch();
   };
 
   const renderMap = useCallback(() => {
@@ -105,7 +140,6 @@ const Geo = () => {
         center={initialPosition} 
         zoom={13} 
         scrollWheelZoom
-        onClick={(e) => {console.log("clicado")}}
       >
         <Markers />
         <TileLayer
@@ -119,8 +153,19 @@ const Geo = () => {
             >
               <Marker           
                 position={[position[0], position[1]]}
-                interactive={false} 
-              />
+              >
+                <Popup>
+                  <Button
+                    backgroundColor={'#00A3FF'}
+                    color={'white'}
+                    marginTop={'24px'} 
+                    size='md'
+                    onClick={() => {handleEditMapMarker(position, index)}}
+                  >
+                    Editar ou deletar
+                  </Button>
+                </Popup>
+              </Marker>
 
               <Circle 
                 center={[position[0], position[1]]} 
@@ -132,6 +177,10 @@ const Geo = () => {
       </MapContainer>
     );
   }, [selectedPosition, initialPosition, positions]);
+
+  const handleSubmitGeo = () => {
+
+  };
 
   return (
     <>
@@ -165,7 +214,7 @@ const Geo = () => {
                     <Switch 
                       size="md" 
                       colorScheme='green'
-                      isChecked={selectedFormFinalGetGeo} 
+                      defaultChecked={selectedFormFinalGetGeo} 
                       onChange={() => setSelectedFormFinalGetGeo(!setSelectedFormFinalGetGeo)}
                     />
 
@@ -184,7 +233,7 @@ const Geo = () => {
                     <Switch 
                       size="md" 
                       colorScheme='green'
-                      isChecked={selectedAsyncGetGeo} 
+                      defaultChecked={selectedAsyncGetGeo} 
                       onChange={() => setSelectedAsyncGetGeo(!setSelectedAsyncGetGeo)}
                     />
 
@@ -218,6 +267,7 @@ const Geo = () => {
                 color={'white'}
                 marginTop={'24px'} 
                 size='md'
+                onClick={handleSubmitGeo}
               >
                 Finalizar
               </Button>
@@ -258,7 +308,7 @@ const Geo = () => {
                 padding='4px'
                 textAlign='center'
               >
-                {selectedPosition[0]}
+                {isEdit ? editPosition[0] : selectedPosition[0]}
               </Text>
             </QuestionContainer>
 
@@ -275,7 +325,7 @@ const Geo = () => {
                 padding='4px'
                 textAlign='center'
               >
-                {selectedPosition[1]}
+                {isEdit ? editPosition[1] : selectedPosition[1]}
               </Text>
             </QuestionContainer>
 
@@ -286,7 +336,7 @@ const Geo = () => {
 
               <NumberInput 
                 onChange={e => setSelectedRadio(e)}
-                defaultValue={10}
+                defaultValue={isEdit ? editPosition[2] : selectedRadio}
                 max={200}
                 min={5}
                 clampValueOnBlur={false}
@@ -304,24 +354,56 @@ const Geo = () => {
             display='flex'
             justifyContent='space-between'
           >
-            <Button 
-              backgroundColor={'#F5F8FA'}
-              color={'#7E8299'}
-              mr={3}
-              onClick={onCloseShareResearch}
-            >
-              Voltar
-            </Button>
+            {isEdit ? (
+              <>
+                <Button 
+                  backgroundColor={'#F5F8FA'}
+                  color={'#7E8299'}
+                  mr={3}
+                  onClick={onCloseShareResearch}
+                >
+                  Voltar
+                </Button>
 
-            <Button 
-              backgroundColor={'#00A3FF'}
-              color={'white'}
-              mr={3}
-              onClick={handleSaveSelectedPosition}
-            >
-              Adicionar
-            </Button>
-            
+                <Button 
+                  backgroundColor={'#00A3FF'}
+                  color={'white'}
+                  mr={3}
+                  onClick={handleUpdateSelectedPosition}
+                >
+                  Editar
+                </Button>
+
+                <Button 
+                  backgroundColor={'#00A3FF'}
+                  color={'white'}
+                  mr={3}
+                  onClick={handleDeleteSelectedPosition}
+                >
+                  Deletar
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  backgroundColor={'#F5F8FA'}
+                  color={'#7E8299'}
+                  mr={3}
+                  onClick={onCloseShareResearch}
+                >
+                  Voltar
+                </Button>
+
+                <Button 
+                  backgroundColor={'#00A3FF'}
+                  color={'white'}
+                  mr={3}
+                  onClick={handleSaveSelectedPosition}
+                >
+                  Adicionar
+                </Button>
+              </>
+            )}
           </ModalFooter>
         </ModalContent>
       </Modal>
