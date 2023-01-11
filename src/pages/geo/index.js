@@ -94,6 +94,8 @@ const Geo = () => {
 
     setPositions(tempPositions);
 
+    setSelectedAsyncGetGeo(true);
+
     onCloseShareResearch();
   };
 
@@ -110,17 +112,21 @@ const Geo = () => {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {positions && positions.map((position => {
+        {positions && positions.map(((position, index) => {
           return (
-            <>
+            <Box
+              key={index}
+            >
               <Marker           
-                key={selectedPosition[0]}
                 position={[position[0], position[1]]}
                 interactive={false} 
               />
 
-              <Circle center={[position[0], position[1]]} radius={position[2]} />
-            </>
+              <Circle 
+                center={[position[0], position[1]]} 
+                radius={position[2]} 
+              />
+            </Box>
           );
         }))}
       </MapContainer>
@@ -156,7 +162,12 @@ const Geo = () => {
                   </Text>
 
                   <SwitchContainer>
-                    <Switch size="md" colorScheme='green' />
+                    <Switch 
+                      size="md" 
+                      colorScheme='green'
+                      isChecked={selectedFormFinalGetGeo} 
+                      onChange={() => setSelectedFormFinalGetGeo(!setSelectedFormFinalGetGeo)}
+                    />
 
                     <Text fontSize='14px'>
                       Grava apenas quando o participante passar em uma área marcada no mapa.
@@ -170,7 +181,12 @@ const Geo = () => {
                   </Text>
 
                   <SwitchContainer>
-                    <Switch size="md" colorScheme='green' onChange={e => console.log(e.target.value)}/>
+                    <Switch 
+                      size="md" 
+                      colorScheme='green'
+                      isChecked={selectedAsyncGetGeo} 
+                      onChange={() => setSelectedAsyncGetGeo(!setSelectedAsyncGetGeo)}
+                    />
 
                     <Text fontSize='14px'>
                       Gravar na finalização do formulário pelo participante.
@@ -218,7 +234,7 @@ const Geo = () => {
               fontSize='16px' 
               color='#3F4254'
             >
-              Ajuste o raio que será utilizado para coletar os dados geográficos!
+              Ajuste o raio que será utilizado para coletar os dados do participante!
             </Text>
           </ModalHeader>
 
@@ -226,43 +242,62 @@ const Geo = () => {
 
           <ModalBody
             display='flex'
+            flexDir='column'
             justifyContent='center'
           >
-            <Text 
-              fontSize='15px' 
-              color='#3F4254'
-              width='100%'
-              border='2px dotted #E4E6EF'
-              padding='4px'
-              textAlign='center'
-            >
-              x:{selectedPosition[0]}
-            </Text>
+            <QuestionContainer>
+              <Text fontSize='14px'>
+                Latitude do marcador
+              </Text>
 
-            <Text 
-              fontSize='15px' 
-              color='#3F4254'
-              width='100%'
-              border='2px dotted #E4E6EF'
-              padding='4px'
-              textAlign='center'
-            >
-              y:{selectedPosition[1]}
-            </Text>
-
-            <NumberInput 
-              onChange={e => setSelectedRadio(e)}
-              defaultValue={10}
-              max={200}
-              min={5}
-              clampValueOnBlur={false}
+              <Text 
+                fontSize='15px' 
+                color='#3F4254'
+                width='100%'
+                border='2px dotted #E4E6EF'
+                padding='4px'
+                textAlign='center'
               >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
+                {selectedPosition[0]}
+              </Text>
+            </QuestionContainer>
+
+            <QuestionContainer>
+              <Text fontSize='14px'>
+                Longitude do marcador
+              </Text>
+
+              <Text 
+                fontSize='15px' 
+                color='#3F4254'
+                width='100%'
+                border='2px dotted #E4E6EF'
+                padding='4px'
+                textAlign='center'
+              >
+                {selectedPosition[1]}
+              </Text>
+            </QuestionContainer>
+
+            <QuestionContainer>
+              <Text fontSize='14px'>
+                Raio do marcador
+              </Text>
+
+              <NumberInput 
+                onChange={e => setSelectedRadio(e)}
+                defaultValue={10}
+                max={200}
+                min={5}
+                clampValueOnBlur={false}
+                >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </QuestionContainer>
           </ModalBody>
 
           <ModalFooter 
