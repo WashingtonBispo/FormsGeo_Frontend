@@ -190,6 +190,10 @@ const Forms = () => {
     setFinalMessage('<p>Mensagem final</p>');
   }
 
+  const handleExportData = (id) => {
+
+  };
+
   const researchOptionHandle = (e, id) => {
     switch(e.value){
       case 'Ativar':
@@ -221,6 +225,9 @@ const Forms = () => {
         break;
       case 'PreTeste':
         changeStatusResearch(id, 5);
+        break;
+      case 'Exportar':
+        handleExportData(id);
         break;
       default:
         return;

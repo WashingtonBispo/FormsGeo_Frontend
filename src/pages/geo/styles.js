@@ -16,18 +16,25 @@ export const ResearchsContainer = styled.div`
 `;
 
 export const InforContainer = styled.div`
-  width: 40%;
+  width: 30%;
 `;
 
 export const QuestionContainer = styled.div`
-  
+  margin-top: 12px;
 `;
 
 export const SwitchContainer = styled.div`
-  
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
 `;
 
 export const MapBodyContainer = styled.div`
+  width: 70%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   .leaflet-container{
     width: 800px;
     height: 400px;
@@ -35,8 +42,10 @@ export const MapBodyContainer = styled.div`
 `;
 
 export const ButtonContainer = styled.div`
-  width: 100%;
+  margin: 0 auto;
+  width: 95%;
   bottom: 0px;
   display: flex;
   justify-content: space-between;
+  margin-bottom: 20px;
 `;

@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, useMapEvents, Circle, Popup } from 'react-leaflet'
+import { useNavigate, useLocation } from 'react-router-dom';
+import { 
+  MapContainer, 
+  TileLayer, 
+  Marker, 
+  useMapEvents, 
+  Circle, 
+  Popup 
+} from 'react-leaflet'
 
 import {
   Box,
@@ -50,8 +57,11 @@ const Geo = () => {
 
   const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
 
+  const maxRadio = 200;
+  const minRadio = 5;
   const color = useColorModeValue('white', 'gray.700');
 
+  const { state } = useLocation();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -64,7 +74,7 @@ const Geo = () => {
     });
   }, [toast]);
 
-  useEffect(() => {
+  const creationFlow = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(position => {
             const { latitude, longitude } = position.coords;
@@ -74,6 +84,17 @@ const Geo = () => {
       showErrorToast("Serviços de geolocalização não são suportados por este browser");
     }
   }, [showErrorToast]);
+
+  const editFlow = useCallback(() => {
+    
+  },[])
+
+  useEffect(() => {
+    if (state.isEdit)
+      editFlow();
+    else
+      creationFlow();
+  }, [creationFlow, editFlow, state]);
 
   const Markers = () => {
     const map = useMapEvents({
@@ -123,7 +144,7 @@ const Geo = () => {
     onCloseShareResearch();
   };
 
-  const handleEditMapMarker = (position, index) => {
+  const handleEditMapMarker = useCallback((position, index) => {
     let tempEditPosition = position;
     tempEditPosition.push(index);
 
@@ -132,7 +153,7 @@ const Geo = () => {
     setIsEdit(true);
 
     onOpenShareResearch();
-  };
+  },[onOpenShareResearch]);
 
   const renderMap = useCallback(() => {
     return (
@@ -155,15 +176,26 @@ const Geo = () => {
                 position={[position[0], position[1]]}
               >
                 <Popup>
-                  <Button
-                    backgroundColor={'#00A3FF'}
-                    color={'white'}
-                    marginTop={'24px'} 
-                    size='md'
-                    onClick={() => {handleEditMapMarker(position, index)}}
+                  <Box
+                    display="flex"
+                    flexDir="column"
+                    justifyContent="center"
+                    alignItems="center"
                   >
-                    Editar ou deletar
-                  </Button>
+                    <Text fontSize='14px'>
+                      Deseja alterar esse marcador?
+                    </Text>
+
+                    <Button
+                      backgroundColor={'#00A3FF'}
+                      color={'white'}
+                      size='md'
+                      width="80%"
+                      onClick={() => {handleEditMapMarker(position, index)}}
+                    >
+                      Alterar
+                    </Button>
+                  </Box>
                 </Popup>
               </Marker>
 
@@ -176,10 +208,14 @@ const Geo = () => {
         }))}
       </MapContainer>
     );
-  }, [selectedPosition, initialPosition, positions]);
+  }, [initialPosition, positions, handleEditMapMarker]);
 
   const handleSubmitGeo = () => {
+    const geoData = {
+      positions: positions
+    };
 
+    navigate('/');
   };
 
   return (
@@ -199,14 +235,22 @@ const Geo = () => {
               width="100%"
               display="flex"
               flexDir="row"
+              marginTop="20px"
+              padding="0 2%"
             >
               <InforContainer>
-                <Text fontSize='14px'>
+                <Text 
+                  fontSize='24px'
+                  fontWeight='bold'
+                >
                   Configure a ferramenta de Geolocalização!
                 </Text>
 
                 <QuestionContainer>
-                  <Text fontSize='14px'>
+                  <Text 
+                    fontSize='14px'
+                    color='#7E8299'
+                  >
                     Grava apenas quando o participante passar em uma área marcada no mapa.
                   </Text>
 
@@ -218,14 +262,21 @@ const Geo = () => {
                       onChange={() => setSelectedFormFinalGetGeo(!setSelectedFormFinalGetGeo)}
                     />
 
-                    <Text fontSize='14px'>
+                    <Text 
+                      fontSize='14px'
+                      marginLeft='8px'
+                      color='#3F4254'
+                    >
                       Grava apenas quando o participante passar em uma área marcada no mapa.
                     </Text>
                   </SwitchContainer>
                 </QuestionContainer>
 
                 <QuestionContainer>
-                  <Text fontSize='14px'>
+                  <Text 
+                    fontSize='14px'
+                    color='#7E8299'
+                  >
                     Gravar no momento em que o participante terminar de responder o formulário.
                   </Text>
 
@@ -237,7 +288,11 @@ const Geo = () => {
                       onChange={() => setSelectedAsyncGetGeo(!setSelectedAsyncGetGeo)}
                     />
 
-                    <Text fontSize='14px'>
+                    <Text 
+                      fontSize='14px'
+                      marginLeft='8px'
+                      color='#3F4254'
+                    >
                       Gravar na finalização do formulário pelo participante.
                     </Text>
                   </SwitchContainer>
@@ -256,7 +311,14 @@ const Geo = () => {
                 marginTop={'24px'} 
                 size='md'
                 onClick={() => {
-                  navigate('/');
+                  navigate('/questoes', {
+                    state: {
+                      numberQuestions: state.numberQuestions,
+                      isEdit: state.isEdit,
+                      formId: state.formId,
+                      questions: state.questions
+                    }
+                  });
                 }}
               >
                 Voltar
@@ -331,14 +393,14 @@ const Geo = () => {
 
             <QuestionContainer>
               <Text fontSize='14px'>
-                Raio do marcador
+                Raio do marcador (m)
               </Text>
 
               <NumberInput 
                 onChange={e => setSelectedRadio(e)}
                 defaultValue={isEdit ? editPosition[2] : selectedRadio}
-                max={200}
-                min={5}
+                max={maxRadio}
+                min={minRadio}
                 clampValueOnBlur={false}
                 >
                 <NumberInputField />

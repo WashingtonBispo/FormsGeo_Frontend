@@ -198,6 +198,10 @@ export const statusOptions = [
         value: 'Duplicar',
       },
       {
+        label: 'Exportar',
+        value: 'Exportar'
+      },
+      {
         label: 'Arquivar',
         value: 'Arquivar'
       },
@@ -213,7 +217,11 @@ export const statusOptions = [
         value: 'Duplicar',
       },
       {
+        label: 'Exportar',
+        value: 'Exportar'
+      },
+      {
         label: 'Arquivar',
         value: 'Arquivar'
-      },
+      }
   ];
