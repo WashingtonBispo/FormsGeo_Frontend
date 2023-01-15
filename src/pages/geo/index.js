@@ -211,11 +211,25 @@ const Geo = () => {
   }, [initialPosition, positions, handleEditMapMarker]);
 
   const handleSubmitGeo = () => {
-    const geoData = {
-      positions: positions
-    };
+    const postGeo = async () => {
+      const submitPositions = positions.map(function(x){ 
+        return{ 
+        radius: x[2],
+        longitude: x[1],
+        latitude: x[0]
+       };});
+  
+      const geoData = {
+        formId: state.formId,
+        geolocations: submitPositions
+      };
+  
+      await api.post('Local', geoData);
 
-    navigate('/');
+      navigate('/');
+    }
+
+    postGeo();
   };
 
   return (
