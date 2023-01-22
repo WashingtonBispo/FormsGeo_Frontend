@@ -602,7 +602,8 @@ const Questions = () => {
                     numberQuestions: state.numberQuestions,
                     isEdit: state.isEdit,
                     formId: state.formId,
-                    questions: state.questions
+                    questions: state.questions,
+                    geolocations: state.geolocations
                   }
                 });
               }}

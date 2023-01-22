@@ -88,6 +88,7 @@ const Forms = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [filed, setFiled] = useState(false);
   const [numberQuestions, setNumberQuestions] = useState(5);
+  const [geolocations, setGeolocations] = useState(null);
 
   const { isOpen: isOpenResearch, onOpen: onOpenResearch, onClose: onCloseResearch } = useDisclosure();
   const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
@@ -177,6 +178,7 @@ const Forms = () => {
     setLinkTerm(research.linkConsent);
     setDescription(research.description);
     setFinalMessage(research.finalMessage);
+    setGeolocations(research.geolocations);
   }
 
   const handleClearModal = () => {
@@ -418,7 +420,8 @@ const Forms = () => {
             numberQuestions: numberQuestions,
             isEdit: true,
             formId: researchId,
-            questions: researchQuestions
+            questions: researchQuestions,
+            geolocations: geolocations
           }
         });
       } catch (err) {

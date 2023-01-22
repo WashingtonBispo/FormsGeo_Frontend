@@ -86,8 +86,23 @@ const Geo = () => {
   }, [showErrorToast]);
 
   const editFlow = useCallback(() => {
-    
-  },[])
+    console.log(state.geolocations);
+    let result = [];
+    let json = JSON.parse(state.geolocations);
+
+    json.map(x => {
+      result.push(
+        [x.latitude, x.longitude, x.radius]
+      )
+    })
+
+    if(result.length> 0)
+      setInitialPosition([result[0][0], result[0][1]]);
+    else
+      creationFlow();
+
+    setPositions(result);
+  },[state, creationFlow])
 
   useEffect(() => {
     if (state.isEdit)
@@ -117,6 +132,7 @@ const Geo = () => {
     let tempPositions = positions.map(p => p);
     tempPositions.push(position);
 
+    console.log(position);
     setPositions(tempPositions);
 
     setSelectedRadio(10);
@@ -221,10 +237,10 @@ const Geo = () => {
   
       const geoData = {
         formId: state.formId,
-        geolocations: submitPositions
+        geolocations: JSON.stringify(submitPositions)
       };
   
-      await api.post('Local', geoData);
+      await api.put('Form/geolocation', geoData);
 
       navigate('/');
     }
