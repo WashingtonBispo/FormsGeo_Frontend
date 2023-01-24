@@ -603,7 +603,7 @@ const Questions = () => {
                     isEdit: state.isEdit,
                     formId: state.formId,
                     questions: state.questions,
-                    geolocations: state.geolocations
+                    geolocations: state.geolocations,
                   }
                 });
               }}

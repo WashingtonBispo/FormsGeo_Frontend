@@ -83,10 +83,11 @@ const Geo = () => {
     } else {
       showErrorToast("Serviços de geolocalização não são suportados por este browser");
     }
+
+    editFlow();
   }, [showErrorToast]);
 
   const editFlow = useCallback(() => {
-    console.log(state.geolocations);
     let result = [];
     let json = JSON.parse(state.geolocations);
 
