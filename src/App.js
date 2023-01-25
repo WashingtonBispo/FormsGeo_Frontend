@@ -5,7 +5,7 @@ import Forms from "./pages/forms"
 import Users from "./pages/users"
 import Profile from "./pages/profile"
 import Questions from "./pages/questions"
-import GlobalStyle from "./utils/globalStyle"
+import Geo from "./pages/geo"
 
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -23,6 +23,9 @@ function App() {
         </Route>
         <Route exact path='/questoes' element={<ProtectedRoute authLevel={"Researcher"} />}>
             <Route exact path='/questoes' element={<Questions />}/>
+        </Route>
+        <Route exact path='/geografia' element={<ProtectedRoute authLevel={"Researcher"} />}>
+            <Route exact path='/geografia' element={<Geo />}/>
         </Route>
         <Route exact path='/usuarios' element={<ProtectedRoute authLevel={"Admin"} />}>
             <Route exact path='/usuarios' element={<Users />}/>

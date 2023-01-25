@@ -113,10 +113,15 @@ const Questions = () => {
 
   useEffect(() => {
     if (state.isEdit){
-      const questions = JSON.parse(state.questions);
-      setPageItens(state.numberQuestions);
-      
-      if (questions.length > 0) setQuestionsList(questions);
+      let questions = null;
+
+      if(state.questions){
+        questions = JSON.parse(state.questions);
+        
+        setPageItens(state.numberQuestions);
+        
+        if (questions.length > 0) setQuestionsList(questions);
+      }
     }
   }, [state]);
 
@@ -590,7 +595,18 @@ const Questions = () => {
             </Button>
 
             <Button
-              onClick={() => {}}
+              onClick={() => {
+                updateFormQuestions();
+                navigate('/geografia', {
+                  state: {
+                    numberQuestions: state.numberQuestions,
+                    isEdit: state.isEdit,
+                    formId: state.formId,
+                    questions: state.questions,
+                    geolocations: state.geolocations,
+                  }
+                });
+              }}
               backgroundColor={'#00A3FF'}
               color={'white'}
               mr={3}

@@ -7,6 +7,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import jwt_decode from 'jwt-decode';
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
+import { ExportToCsv } from 'export-to-csv';
 
 import { compressImage, parsePictureToBase64, parseBase64ToPicture } from '../../utils/img'
 
@@ -88,6 +89,7 @@ const Forms = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [filed, setFiled] = useState(false);
   const [numberQuestions, setNumberQuestions] = useState(5);
+  const [geolocations, setGeolocations] = useState(null);
 
   const { isOpen: isOpenResearch, onOpen: onOpenResearch, onClose: onCloseResearch } = useDisclosure();
   const { isOpen: isOpenShareResearch, onOpen: onOpenShareResearch, onClose: onCloseShareResearch } = useDisclosure();
@@ -177,6 +179,7 @@ const Forms = () => {
     setLinkTerm(research.linkConsent);
     setDescription(research.description);
     setFinalMessage(research.finalMessage);
+    setGeolocations(research.geolocations);
   }
 
   const handleClearModal = () => {
@@ -189,6 +192,62 @@ const Forms = () => {
     setDescription('<p>Descrição e termo de  consentimento</p>');
     setFinalMessage('<p>Mensagem final</p>');
   }
+
+  const handleQuestionsType = (question) => {
+    
+    if(question.type === 4){
+      let nha = "";
+      for(let i=0;i<question.answers.length;i++){
+        nha = nha + question.answers[i] + (i=== question.answers.length-1 ? "" : ",")
+      }
+      return nha
+    }
+    else{
+      return question.answers.toString()
+    }
+  }
+
+  const handleExportData = (id) => {
+    const exportData = async (id) => {
+      let questionary = await api.get('Form?formId=' + id);
+      let answers = await api.get('Answer?formId=' + id);
+
+      //let questions = JSON.parse(questionary.data.questions)
+      
+      let data = []
+      for(let i =0 ; i < answers.data.length; i++){
+        let answer = JSON.parse(answers.data[i].answer);
+        data[i] = {
+          "geolocation": answers.data[i].geolocation
+        }
+        
+        for(let j=0;j< answer.length;j++){
+          data[i][(j+1).toString()] = handleQuestionsType(answer[j])
+        }
+      }
+
+
+      const options = {
+        fieldSeparator: ';',
+        quoteStrings: '"',
+        decimalSeparator: '.',
+        showLabels: true,
+        showTitle: false,
+        useTextFile: false,
+        useBom: true,
+        useKeysAsHeaders: true,
+      };
+
+      const csvExporter = new ExportToCsv(options);
+
+      csvExporter.generateCsv(data);
+
+
+
+    }
+
+    exportData(id);
+  };
 
   const researchOptionHandle = (e, id) => {
     switch(e.value){
@@ -221,6 +280,9 @@ const Forms = () => {
         break;
       case 'PreTeste':
         changeStatusResearch(id, 5);
+        break;
+      case 'Exportar':
+        handleExportData(id);
         break;
       default:
         return;
@@ -411,7 +473,8 @@ const Forms = () => {
             numberQuestions: numberQuestions,
             isEdit: true,
             formId: researchId,
-            questions: researchQuestions
+            questions: researchQuestions,
+            geolocations: geolocations
           }
         });
       } catch (err) {
