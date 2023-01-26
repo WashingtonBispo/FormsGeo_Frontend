@@ -23,7 +23,7 @@ export const QuestionsListContainer = styled.div`
 export const AddQuestionContainer = styled.div`
   width: 100%;
   height: 100%;
-  position: relative;
+  overflow: auto;
 `;
 
 export const AddQuestionBody = styled.div`

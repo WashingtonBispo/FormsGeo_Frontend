@@ -82,13 +82,13 @@ const Geo = () => {
         });
     } else {
       showErrorToast("Serviços de geolocalização não são suportados por este browser");
-    }
-
-    editFlow();
+    };
   }, [showErrorToast]);
 
   const editFlow = useCallback(() => {
     let result = [];
+    if(state.geolocations.length == 0 )
+    creationFlow();
     let json = JSON.parse(state.geolocations);
 
     json.map(x => {

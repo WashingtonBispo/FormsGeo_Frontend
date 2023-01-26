@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useToast, useDisclosure } from '@chakra-ui/react'
+import { useToast, useDisclosure, flexbox } from '@chakra-ui/react'
 
 import {
   Box,
@@ -519,31 +519,38 @@ const Questions = () => {
                 renderQuestion()
               )}
             </AddQuestionBody>
-
-            <AddQuestionButtonContainer>
-              <Button 
-                backgroundColor={'#F5F8FA'}
-                color={'#7E8299'}
-                marginTop={'24px'} 
-                size='md'
-                onClick={() => {
-                  updateFormQuestions();
-                  navigate('/');
-                }}
+              
+            {questionsList.length === 0 ? (
+                <></>
+              ) : (
+              <Box
+              display={"flex"}
+              justifyContent={"space-between"}
               >
-                Voltar
-              </Button>
+                  <Button 
+                    backgroundColor={'#F5F8FA'}
+                    color={'#7E8299'}
+                    marginTop={'24px'} 
+                    size='md'
+                    onClick={() => {
+                      updateFormQuestions();
+                      navigate('/');
+                    }}
+                    >
+                    Voltar
+                  </Button>
 
-              <Button
-                onClick={onOpen}
-                backgroundColor={'#00A3FF'}
-                color={'white'}
-                marginTop={'24px'} 
-                size='md'
-              >
-                Próximo
-              </Button>
-            </AddQuestionButtonContainer>
+                  <Button
+                    onClick={onOpen}
+                    backgroundColor={'#00A3FF'}
+                    color={'white'}
+                    marginTop={'24px'} 
+                    size='md'
+                    >
+                    Próximo
+                  </Button>
+              </Box>
+              )}
           </AddQuestionContainer>
         </Box>
       </BodyContainer>

@@ -212,7 +212,12 @@ const Forms = () => {
       let questionary = await api.get('Form?formId=' + id);
       let answers = await api.get('Answer?formId=' + id);
 
-      //let questions = JSON.parse(questionary.data.questions)
+      if(questionary.data.numberAnswers === 0)
+      {
+        showErrorToast('Não é possível exportar um formulário semr resposta.');
+        return;
+      }
+
       
       let data = []
       for(let i =0 ; i < answers.data.length; i++){
@@ -276,7 +281,10 @@ const Forms = () => {
         copyResearch(id);
         break;
       case 'Arquivar':
-        changeStatusResearch(id, 2);
+        handleArchivedResearch(id, true);
+        break;
+      case 'Desarquivar':
+        handleArchivedResearch(id, false);
         break;
       case 'PreTeste':
         changeStatusResearch(id, 5);
@@ -288,6 +296,26 @@ const Forms = () => {
         return;
     }
   };
+
+  const handleArchivedResearch = (id, toArchived) => {
+    const HandleResearch = async (id, toArchived) => {
+
+      const data  = {
+        formId: id,
+        archived: toArchived,
+      }
+
+      try{ 
+        await api.put('Form/archive', data);
+        setCount(count + 1);
+      }
+      catch (err){
+        showErrorToast(`Ocorreu um erro ao ${toArchived ? "des" : ""}arquivar a pesquisa.`);
+      }
+    }
+
+    HandleResearch(id, toArchived);
+  }
 
   const softDeleteResearch = (id) => {
     const HandleResearch = async (id) => {
@@ -699,11 +727,11 @@ const Forms = () => {
                           size={'md'} 
                           key={'md'} 
                           variant='subtle' 
-                          color={statusOptions[research.status-1].color}
-                          backgroundColor={statusOptions[research.status-1].backgroundColor}
+                          color={research.isArchiverd? statusOptions[1].color : statusOptions[research.status-1].color}
+                          backgroundColor={research.isArchiverd? statusOptions[1].backgroundColor : statusOptions[research.status-1].backgroundColor}
                           marginLeft='8px'
                           >
-                          <TagLabel>{statusOptions[research.status-1].status}</TagLabel>
+                          <TagLabel>{research.isArchiverd? statusOptions[1].status: statusOptions[research.status-1].status}</TagLabel>
                         </Tag>
                     </Text>
                   </AboutContainer>
@@ -749,7 +777,7 @@ const Forms = () => {
                         color='#3F4254' 
                         fontWeight='bold'
                       >
-                        {12/*research.answers*/}
+                        {research.numberAnswers}
                       </Text>
 
                       <Text 
